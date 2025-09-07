@@ -2,11 +2,19 @@
     <form action="" method="post" wire:submit="checkout" class="mb-32">
         @csrf
 
+        @php
+            $shouldDisplayFirstFirstColumn = $requiresPayment || !auth()->check();
+        @endphp
         <x-section.columns class="max-w-none md:max-w-6xl flex-wrap-reverse">
+            @if($shouldDisplayFirstFirstColumn)
             <x-section.column>
                 @include('livewire.checkout.partials.login-or-register')
-                @include('livewire.checkout.partials.payment')
+
+                @if($requiresPayment)
+                    @include('livewire.checkout.partials.payment')
+                @endif
             </x-section.column>
+            @endif
 
             <x-section.column>
                 @include('livewire.checkout.partials.product-details')

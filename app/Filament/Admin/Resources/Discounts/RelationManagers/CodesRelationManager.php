@@ -32,7 +32,7 @@ class CodesRelationManager extends RelationManager
                         ->required()
                         ->unique()
                         ->maxLength(255),
-                ]),
+                ])->columnSpanFull(),
             ]);
     }
 
