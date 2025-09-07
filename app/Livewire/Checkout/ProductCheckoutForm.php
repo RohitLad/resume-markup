@@ -2,6 +2,7 @@
 
 namespace App\Livewire\Checkout;
 
+use App\Dto\TotalsDto;
 use App\Exceptions\LoginException;
 use App\Services\CalculationService;
 use App\Services\CheckoutService;
@@ -13,6 +14,7 @@ use App\Services\SessionService;
 use App\Services\UserService;
 use App\Validator\LoginValidator;
 use App\Validator\RegisterValidator;
+use Livewire\Attributes\On;
 
 class ProductCheckoutForm extends CheckoutForm
 {
@@ -53,14 +55,6 @@ class ProductCheckoutForm extends CheckoutForm
 
         $cartDto = $this->sessionService->getCartDto();
 
-        $order = $checkoutService->initProductCheckout($cartDto);
-
-        $cartDto->orderId = $order->id;
-
-        $paymentProvider = $paymentService->getPaymentProviderBySlug(
-            $this->paymentProvider
-        );
-
         $discount = null;
         if ($cartDto->discountCode !== null) {
             $discount = $discountService->getActiveDiscountByCode($cartDto->discountCode);
@@ -75,29 +69,39 @@ class ProductCheckoutForm extends CheckoutForm
             }
         }
 
-        $initData = $paymentProvider->initProductCheckout($order, $discount);
+        $user = auth()->user();
+        $totals = $this->calculationService->calculateCartTotals($cartDto, $user);
+
+        $order = $checkoutService->initProductCheckout($cartDto, $totals);
+        $cartDto->orderId = $order->id;
 
         $this->sessionService->saveCartDto($cartDto);
 
-        $user = auth()->user();
-
-        if ($paymentProvider->isRedirectProvider()) {
-            $link = $paymentProvider->createProductCheckoutRedirectLink(
-                $order,
-                $discount,
+        if ($this->requiresPayment($totals)) {
+            $paymentProvider = $paymentService->getPaymentProviderBySlug(
+                $this->paymentProvider
             );
 
-            return redirect()->away($link);
-        }
+            $initData = $paymentProvider->initProductCheckout($order, $discount);
 
-        if ($paymentProvider->isOverlayProvider()) {
-            return $this->dispatch('start-overlay-checkout',
-                paymentProvider: $paymentProvider->getSlug(),
-                initData: $initData,
-                successUrl: route('checkout.product.success'),
-                email: $user->email,
-                orderUuid: $order->uuid,
-            );
+            if ($paymentProvider->isRedirectProvider()) {
+                $link = $paymentProvider->createProductCheckoutRedirectLink(
+                    $order,
+                    $discount,
+                );
+
+                return redirect()->away($link);
+            }
+
+            if ($paymentProvider->isOverlayProvider()) {
+                return $this->dispatch('start-overlay-checkout',
+                    paymentProvider: $paymentProvider->getSlug(),
+                    initData: $initData,
+                    successUrl: route('checkout.product.success'),
+                    email: $user->email,
+                    orderUuid: $order->uuid,
+                );
+            }
         }
 
         return redirect()->route('checkout.product.success');
@@ -118,6 +122,18 @@ class ProductCheckoutForm extends CheckoutForm
             'userExists' => $this->userExists($this->email),
             'paymentProviders' => $this->getPaymentProviders($paymentService),
             'totals' => $totals,
+            'requiresPayment' => $this->requiresPayment($totals),
         ]);
+    }
+
+    #[On('refresh-product-checkout')]
+    public function refresh()
+    {
+        // do nothing, just re-render the component
+    }
+
+    public function requiresPayment(TotalsDto $totals): bool
+    {
+        return $totals->amountDue > 0;
     }
 }

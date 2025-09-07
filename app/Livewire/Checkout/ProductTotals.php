@@ -111,6 +111,8 @@ class ProductTotals extends Component
         $this->discountAmount = $totals->discountAmount;
         $this->amountDue = $totals->amountDue;
         $this->currencyCode = $totals->currencyCode;
+
+        $this->dispatch('refresh-product-checkout');
     }
 
     public function render()

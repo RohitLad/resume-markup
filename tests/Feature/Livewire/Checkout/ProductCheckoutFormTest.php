@@ -5,6 +5,7 @@ namespace Tests\Feature\Livewire\Checkout;
 use App\Constants\OrderStatus;
 use App\Dto\CartDto;
 use App\Dto\CartItemDto;
+use App\Events\Order\Ordered;
 use App\Livewire\Checkout\ProductCheckoutForm;
 use App\Models\Currency;
 use App\Models\OneTimeProduct;
@@ -15,6 +16,7 @@ use App\Models\User;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use App\Services\PaymentProviders\PaymentService;
 use App\Services\SessionService;
+use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 use Mockery;
 use Mockery\MockInterface;
@@ -118,6 +120,83 @@ class ProductCheckoutFormTest extends FeatureTest
 
         // assert order has been created
         $this->assertEquals($ordersBefore + 1, Order::count());
+    }
+
+    public function test_checkout_free_product()
+    {
+        $product = OneTimeProduct::factory()->create([
+            'slug' => 'product-slug-'.str()->random(5),
+            'is_active' => true,
+        ]);
+
+        OneTimeProductPrice::create([
+            'one_time_product_id' => $product->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 0,
+        ]);
+
+        $user = User::factory()->create([
+            'email' => 'existing-'.str()->random(5).'@gmail.com',
+            'password' => bcrypt('password'),
+            'name' => 'Name',
+        ]);
+
+        PaymentProvider::updateOrCreate([
+            'slug' => 'paymore',
+        ], [
+            'name' => 'Paymore',
+            'is_active' => true,
+            'type' => 'any',
+        ]);
+
+        $mock = Mockery::mock(PaymentProviderInterface::class);
+        $mock->shouldNotReceive('initProductCheckout');
+
+        $mock->shouldNotReceive('isRedirectProvider');
+
+        $mock->shouldReceive('getSlug')
+            ->andReturn('paymore');
+
+        $mock->shouldReceive('getName')
+            ->andReturn('Paymore');
+
+        $mock->shouldNotReceive('isOverlayProvider');
+
+        $this->app->instance(PaymentProviderInterface::class, $mock);
+
+        $this->app->bind(PaymentService::class, function () use ($mock) {
+            return new PaymentService($mock);
+        });
+
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+
+            $mock->shouldReceive('saveCartDto');
+        }));
+
+        // get number of orders before checkout
+        $ordersBefore = Order::count();
+
+        Event::fake();
+
+        Livewire::test(ProductCheckoutForm::class)
+            ->set('email', $user->email)
+            ->set('password', 'password')
+            ->call('checkout');
+
+        Event::assertDispatched(Ordered::class);
+
+        // assert order has been created
+        $this->assertEquals($ordersBefore + 1, Order::count());
+
+        $latestOrder = Order::latest('id')->first();
+        $this->assertEquals(OrderStatus::SUCCESS->value, $latestOrder->status);
+        $this->assertEquals(true, $latestOrder->is_local);
+
     }
 
     private function addPaymentProvider(bool $isRedirect = true)
