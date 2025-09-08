@@ -78,6 +78,8 @@ class StripeWebhookHandler
                     'payment_provider_id' => $paymentProvider->id,
                     'trial_ends_at' => $trialEndsAt,
                     'cancelled_at' => $cancelledAt,
+                    'is_canceled_at_end_of_cycle' => $event->data->object->cancel_at_period_end ?? false,
+                    'cancellation_reason' => $event->data->object->cancellation_details?->feedback ?? $subscription->cancellation_reason,
                 ]);
             });
 
