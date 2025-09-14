@@ -139,4 +139,9 @@ class ProductResource extends Resource
     {
         return __('Subscription Products');
     }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Subscription Products');
+    }
 }

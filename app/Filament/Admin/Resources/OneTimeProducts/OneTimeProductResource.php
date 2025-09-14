@@ -134,6 +134,11 @@ class OneTimeProductResource extends Resource
         return __('One-time Purchase Products');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('One-time Purchase Products');
+    }
+
     public static function getRelations(): array
     {
         return [

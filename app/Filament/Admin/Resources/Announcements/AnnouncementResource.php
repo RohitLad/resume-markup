@@ -28,6 +28,16 @@ class AnnouncementResource extends Resource
         return __('Announcements');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Announcements');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Announcement');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

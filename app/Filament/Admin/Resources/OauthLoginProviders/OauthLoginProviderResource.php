@@ -33,6 +33,16 @@ class OauthLoginProviderResource extends Resource
         return __('Settings');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Oauth Login Providers');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Oauth Login Provider');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
