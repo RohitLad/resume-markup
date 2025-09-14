@@ -37,6 +37,16 @@ class UserResource extends Resource
         return __('User Management');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Users');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('User');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

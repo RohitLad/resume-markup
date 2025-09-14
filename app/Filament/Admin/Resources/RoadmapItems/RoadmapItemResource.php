@@ -37,6 +37,16 @@ class RoadmapItemResource extends Resource
         return __('Roadmap');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Roadmap Items');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Roadmap Item');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

@@ -155,6 +155,11 @@ class TransactionResource extends Resource
         return __('Payments');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Payments');
+    }
+
     public static function isDiscovered(): bool
     {
         return app()->make(ConfigService::class)->get('app.customer_dashboard.show_transactions', true);

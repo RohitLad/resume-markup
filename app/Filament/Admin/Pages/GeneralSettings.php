@@ -14,6 +14,11 @@ class GeneralSettings extends Page
         return __('Settings');
     }
 
+    public static function getNavigationLabel(): string
+    {
+        return __('General Settings');
+    }
+
     public static function canAccess(): bool
     {
         $configService = app()->make(ConfigService::class);

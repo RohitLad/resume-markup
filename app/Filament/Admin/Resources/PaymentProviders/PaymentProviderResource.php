@@ -29,6 +29,16 @@ class PaymentProviderResource extends Resource
         return __('Settings');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Payment Providers');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Payment Provider');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

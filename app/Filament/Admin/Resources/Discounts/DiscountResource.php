@@ -38,6 +38,16 @@ class DiscountResource extends Resource
         return __('Product Management');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Discounts');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Discount');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

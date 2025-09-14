@@ -29,6 +29,16 @@ class BlogPostCategoryResource extends Resource
         return __('Blog');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Blog Post Categories');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Blog Post Category');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

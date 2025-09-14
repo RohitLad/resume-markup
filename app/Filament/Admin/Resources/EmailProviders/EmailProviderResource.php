@@ -31,6 +31,16 @@ class EmailProviderResource extends Resource
         return __('Settings');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Email Providers');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Email Provider');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema
@@ -58,7 +68,7 @@ class EmailProviderResource extends Resource
                     ->getStateUsing(function (EmailProvider $record) {
                         return new HtmlString(
                             '<div class="flex gap-2">'.
-                            ' <img src="'.asset('images/email-providers/'.$record->slug.'.svg').'"  class="h-6"> '
+                            ' <img src="'.asset('images/email-providers/'.$record->slug.'.svg').'" alt="'.__('Provider Name').'" class="h-6"> '
                             .$record->name
                             .'</div>'
                         );

@@ -40,6 +40,16 @@ class PlanResource extends Resource
         return __('Product Management');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Plans');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Plan');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

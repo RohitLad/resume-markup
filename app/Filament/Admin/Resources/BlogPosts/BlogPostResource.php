@@ -38,6 +38,16 @@ class BlogPostResource extends Resource
         return __('Blog');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Blog Posts');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Blog Post');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

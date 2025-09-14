@@ -28,6 +28,16 @@ class RoleResource extends Resource
         return __('User Management');
     }
 
+    public static function getPluralModelLabel(): string
+    {
+        return __('Roles');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Role');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return $schema

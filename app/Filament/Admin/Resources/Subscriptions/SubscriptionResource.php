@@ -397,4 +397,14 @@ class SubscriptionResource extends Resource
     {
         return __('Subscriptions');
     }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('Subscriptions');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('Subscription');
+    }
 }
