@@ -11,11 +11,14 @@ class RegisterValidator
         $rules = [
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:8'],
         ];
 
-        if ($passwordConfirmed) {
-            $rules['password'][] = 'confirmed';
+        if (false) {  // todo: add a config option to enable/disable password during registration
+            $rules['password'] = ['required', 'string', 'min:8'];
+
+            if ($passwordConfirmed) {
+                $rules['password'][] = 'confirmed';
+            }
         }
 
         if (config('app.recaptcha_enabled')) {

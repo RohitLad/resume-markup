@@ -118,7 +118,7 @@ class CheckoutForm extends Component
             $fields[recaptchaFieldName()] = $this->recaptcha;
         }
 
-        $validator = $registerValidator->validate($fields, false);
+        $validator = $registerValidator->validate($fields, passwordConfirmed: false);
 
         if ($validator->fails()) {
             $this->resetReCaptcha();

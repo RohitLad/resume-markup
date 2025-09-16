@@ -21,4 +21,9 @@ class UserService
         $user->last_seen_at = now();
         $user->save();
     }
+
+    public function findByEmail(string $email): ?User
+    {
+        return User::where('email', strtolower($email))->first();
+    }
 }
