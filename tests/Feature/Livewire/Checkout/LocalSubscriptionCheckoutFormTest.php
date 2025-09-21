@@ -18,8 +18,14 @@ use App\Models\PlanPrice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserSubscriptionTrial;
+use App\Services\OneTimePasswordService;
+use App\Services\UserService;
+use App\Validator\LoginValidator;
+use App\Validator\RegisterValidator;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
+use Mockery;
 use Tests\Feature\FeatureTest;
 
 class LocalSubscriptionCheckoutFormTest extends FeatureTest
@@ -381,5 +387,165 @@ class LocalSubscriptionCheckoutFormTest extends FeatureTest
 
         // assert user is not logged in
         $this->assertGuest();
+    }
+
+    public function test_send_otp_code_for_existing_user()
+    {
+        config(['app.otp_login_enabled' => true, 'app.trial_without_payment.enabled' => true]);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $email = 'existing'.rand(1, 10000).'@example.com';
+
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true, 'has_trial' => true, 'trial_interval_count' => 7, 'trial_interval_id' => Interval::where('slug', 'day')->first()->id]);
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 0,
+        ]);
+
+        $user = User::factory()->create(['email' => $email]);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn($user);
+
+        $mockLoginValidator = Mockery::mock(LoginValidator::class);
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+        $mockLoginValidator->shouldReceive('validate')
+            ->with(['email' => $email])
+            ->andReturn($validator);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $mockOtpService->shouldReceive('sendCode')
+            ->with($user)
+            ->andReturn(true);
+
+        $this->app->instance(UserService::class, $mockUserService);
+        $this->app->instance(LoginValidator::class, $mockLoginValidator);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        Livewire::test(LocalSubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
+    }
+
+    public function test_send_otp_code_for_new_user()
+    {
+        config(['app.otp_login_enabled' => true, 'app.trial_without_payment.enabled' => true]);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $email = 'newuser'.rand(1, 10000).'@example.com';
+        $name = 'Test User';
+
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true, 'has_trial' => true, 'trial_interval_count' => 7, 'trial_interval_id' => Interval::where('slug', 'day')->first()->id]);
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 0,
+        ]);
+
+        $newUser = User::factory()->make(['email' => $email, 'name' => $name]);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn(null);
+        $mockUserService->shouldReceive('createUser')
+            ->with(['name' => $name, 'email' => $email])
+            ->andReturn($newUser);
+
+        $mockRegisterValidator = Mockery::mock(RegisterValidator::class);
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+        $mockRegisterValidator->shouldReceive('validate')
+            ->with(['name' => $name, 'email' => $email], false)
+            ->andReturn($validator);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $mockOtpService->shouldReceive('sendCode')
+            ->with($newUser)
+            ->andReturn(true);
+
+        $this->app->instance(UserService::class, $mockUserService);
+        $this->app->instance(RegisterValidator::class, $mockRegisterValidator);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        Livewire::test(LocalSubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->set('name', $name)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
+    }
+
+    public function test_verify_otp_and_proceed_with_valid_code()
+    {
+        config(['app.otp_login_enabled' => true, 'app.trial_without_payment.enabled' => true]);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $email = 'existing'.rand(1, 10000).'@example.com';
+
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true, 'has_trial' => true, 'trial_interval_count' => 7, 'trial_interval_id' => Interval::where('slug', 'day')->first()->id]);
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 0,
+        ]);
+
+        $user = User::factory()->create(['email' => $email]);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn($user);
+
+        $this->app->instance(UserService::class, $mockUserService);
+
+        // Mock the OTP action to pass validation
+        $mockOtpAction = Mockery::mock(\Spatie\OneTimePasswords\Actions\ConsumeOneTimePasswordAction::class);
+        $mockOtpAction->shouldReceive('execute')
+            ->with($user, '123456', Mockery::any())
+            ->andReturn(\Spatie\OneTimePasswords\Enums\ConsumeOneTimePasswordResult::Ok);
+        $this->app->instance(\Spatie\OneTimePasswords\Actions\ConsumeOneTimePasswordAction::class, $mockOtpAction);
+
+        // Mock LoginService for authentication
+        $mockLoginService = Mockery::mock(\App\Services\LoginService::class);
+        $mockLoginService->shouldReceive('authenticateUser')
+            ->with($user, true)
+            ->andReturnUsing(function ($user) {
+                auth()->login($user);
+            });
+        $this->app->instance(\App\Services\LoginService::class, $mockLoginService);
+
+        Livewire::test(LocalSubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->set('oneTimePassword', '123456')
+            ->call('verifyOtpAndProceed')
+            ->assertHasNoErrors();
+
+        $this->assertTrue(auth()->check());
+        $this->assertEquals($user->id, auth()->id());
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
     }
 }

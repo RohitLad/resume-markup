@@ -16,10 +16,16 @@ use App\Models\PlanPrice;
 use App\Models\Subscription;
 use App\Models\User;
 use App\Models\UserSubscriptionTrial;
+use App\Services\OneTimePasswordService;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use App\Services\PaymentProviders\PaymentService;
+use App\Services\UserService;
+use App\Validator\LoginValidator;
+use App\Validator\RegisterValidator;
 use Exception;
+use Illuminate\Contracts\Validation\Validator;
 use Livewire\Livewire;
+use Mockery;
 use Tests\Feature\FeatureTest;
 
 class SubscriptionCheckoutFormTest extends FeatureTest
@@ -407,6 +413,301 @@ class SubscriptionCheckoutFormTest extends FeatureTest
 
         // assert order has been created
         $this->assertEquals($subscriptionsBefore + 1, Subscription::count());
+    }
+
+    public function test_send_otp_code_for_existing_user()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $email = 'existing'.rand(1, 10000).'@example.com';
+
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true]);
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $user = User::factory()->create(['email' => $email]);
+
+        $paymentProvider = $this->addPaymentProvider();
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([PlanType::FLAT_RATE->value]);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn($user);
+
+        $mockLoginValidator = Mockery::mock(LoginValidator::class);
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+        $mockLoginValidator->shouldReceive('validate')
+            ->with(['email' => $email])
+            ->andReturn($validator);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $mockOtpService->shouldReceive('sendCode')
+            ->with($user)
+            ->andReturn(true);
+
+        $this->app->instance(UserService::class, $mockUserService);
+        $this->app->instance(LoginValidator::class, $mockLoginValidator);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        Livewire::test(SubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
+    }
+
+    public function test_send_otp_code_for_new_user()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $email = 'newuser'.rand(1, 10000).'@example.com';
+        $name = 'Test User';
+
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true]);
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $newUser = User::factory()->make(['email' => $email, 'name' => $name]);
+
+        $paymentProvider = $this->addPaymentProvider();
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([PlanType::FLAT_RATE->value]);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn(null);
+        $mockUserService->shouldReceive('createUser')
+            ->with(['name' => $name, 'email' => $email])
+            ->andReturn($newUser);
+
+        $mockRegisterValidator = Mockery::mock(RegisterValidator::class);
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+        $mockRegisterValidator->shouldReceive('validate')
+            ->with(['name' => $name, 'email' => $email], false)
+            ->andReturn($validator);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $mockOtpService->shouldReceive('sendCode')
+            ->with($newUser)
+            ->andReturn(true);
+
+        $this->app->instance(UserService::class, $mockUserService);
+        $this->app->instance(RegisterValidator::class, $mockRegisterValidator);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        Livewire::test(SubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->set('name', $name)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
+    }
+
+    public function test_send_otp_code_fails_when_service_returns_false()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $email = 'existing'.rand(1, 10000).'@example.com';
+
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true]);
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $user = User::factory()->create(['email' => $email]);
+
+        $paymentProvider = $this->addPaymentProvider();
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([PlanType::FLAT_RATE->value]);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn($user);
+
+        $mockLoginValidator = Mockery::mock(LoginValidator::class);
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+        $mockLoginValidator->shouldReceive('validate')
+            ->with(['email' => $email])
+            ->andReturn($validator);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $mockOtpService->shouldReceive('sendCode')
+            ->with($user)
+            ->andReturn(false);
+
+        $this->app->instance(UserService::class, $mockUserService);
+        $this->app->instance(LoginValidator::class, $mockLoginValidator);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        Livewire::test(SubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', false)
+            ->assertHasErrors(['email' => 'Failed to send one-time password. Please try again later.']);
+    }
+
+    public function test_verify_otp_and_proceed_with_valid_code()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $email = 'existing'.rand(1, 10000).'@example.com';
+        $otpCode = '123456';
+
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true]);
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $user = User::factory()->create(['email' => $email]);
+
+        $paymentProvider = $this->addPaymentProvider();
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([PlanType::FLAT_RATE->value]);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn($user);
+
+        $this->app->instance(UserService::class, $mockUserService);
+
+        // Mock the OTP action to pass validation
+        $mockOtpAction = Mockery::mock(\Spatie\OneTimePasswords\Actions\ConsumeOneTimePasswordAction::class);
+        $mockOtpAction->shouldReceive('execute')
+            ->with($user, $otpCode, Mockery::any())
+            ->andReturn(\Spatie\OneTimePasswords\Enums\ConsumeOneTimePasswordResult::Ok);
+        $this->app->instance(\Spatie\OneTimePasswords\Actions\ConsumeOneTimePasswordAction::class, $mockOtpAction);
+
+        // Mock LoginService for authentication
+        $mockLoginService = Mockery::mock(\App\Services\LoginService::class);
+        $mockLoginService->shouldReceive('authenticateUser')
+            ->with($user, true)
+            ->andReturnUsing(function ($user) {
+                auth()->login($user);
+            });
+        $this->app->instance(\App\Services\LoginService::class, $mockLoginService);
+
+        Livewire::test(SubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->set('oneTimePassword', $otpCode)
+            ->call('verifyOtpAndProceed')
+            ->assertHasNoErrors();
+
+        $this->assertTrue(auth()->check());
+        $this->assertEquals($user->id, auth()->id());
+    }
+
+    public function test_verify_otp_and_proceed_with_user_not_found()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $email = 'nonexistent'.rand(1, 10000).'@example.com';
+
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true]);
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $paymentProvider = $this->addPaymentProvider();
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([PlanType::FLAT_RATE->value]);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn(null);
+
+        $this->app->instance(UserService::class, $mockUserService);
+
+        Livewire::test(SubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->set('oneTimePassword', '123456')
+            ->call('verifyOtpAndProceed')
+            ->assertHasErrors(['oneTimePassword' => 'User not found.']);
+    }
+
+    public function test_is_checkout_button_enabled_with_otp_enabled()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $planSlug = 'plan-slug-'.rand(1, 1000000);
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true]);
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $paymentProvider = $this->addPaymentProvider();
+        $paymentProvider->shouldReceive('getSupportedPlanTypes')
+            ->andReturn([PlanType::FLAT_RATE->value]);
+
+        // Test when not showing OTP form
+        $component = Livewire::test(SubscriptionCheckoutForm::class);
+        $this->assertFalse($component->instance()->isCheckoutButtonEnabled());
+
+        // Test when showing OTP form but no email or OTP
+        $component->set('showOtpForm', true);
+        $this->assertFalse($component->instance()->isCheckoutButtonEnabled());
+
+        // Test when showing OTP form with email and OTP
+        $component->set('email', 'test@example.com')
+            ->set('oneTimePassword', '123456');
+        $this->assertTrue($component->instance()->isCheckoutButtonEnabled());
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
     }
 
     private function addOfflinePaymentProvider()

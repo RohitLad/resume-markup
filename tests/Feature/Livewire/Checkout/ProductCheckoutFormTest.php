@@ -13,9 +13,14 @@ use App\Models\OneTimeProductPrice;
 use App\Models\Order;
 use App\Models\PaymentProvider;
 use App\Models\User;
+use App\Services\OneTimePasswordService;
 use App\Services\PaymentProviders\PaymentProviderInterface;
 use App\Services\PaymentProviders\PaymentService;
 use App\Services\SessionService;
+use App\Services\UserService;
+use App\Validator\LoginValidator;
+use App\Validator\RegisterValidator;
+use Illuminate\Contracts\Validation\Validator;
 use Illuminate\Support\Facades\Event;
 use Livewire\Livewire;
 use Mockery;
@@ -437,5 +442,274 @@ class ProductCheckoutFormTest extends FeatureTest
 
         $latestOrder = Order::find($checkoutDto->orderId);
         $this->assertEquals(3, $latestOrder->items->first()->quantity);
+    }
+
+    public function test_send_otp_code_for_existing_user()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $product = OneTimeProduct::factory()->create([
+            'slug' => 'product-slug-otp-'.rand(1, 1000000),
+            'is_active' => true,
+        ]);
+
+        OneTimeProductPrice::create([
+            'one_time_product_id' => $product->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 50,
+        ]);
+
+        $email = 'existing'.rand(1, 10000).'@example.com';
+        $user = User::factory()->create(['email' => $email]);
+
+        $this->addPaymentProviderForRendering();
+
+        // Mock SessionService to provide cart data
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+            $mock->shouldReceive('saveCartDto');
+        }));
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn($user);
+
+        $mockLoginValidator = Mockery::mock(LoginValidator::class);
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+        $mockLoginValidator->shouldReceive('validate')
+            ->with(['email' => $email])
+            ->andReturn($validator);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $mockOtpService->shouldReceive('sendCode')
+            ->with($user)
+            ->andReturn(true);
+
+        $this->app->instance(UserService::class, $mockUserService);
+        $this->app->instance(LoginValidator::class, $mockLoginValidator);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        Livewire::test(ProductCheckoutForm::class)
+            ->set('email', $email)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
+    }
+
+    public function test_send_otp_code_for_new_user()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $product = OneTimeProduct::factory()->create([
+            'slug' => 'product-slug-otp-'.rand(1, 1000000),
+            'is_active' => true,
+        ]);
+
+        OneTimeProductPrice::create([
+            'one_time_product_id' => $product->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 50,
+        ]);
+
+        $email = 'newuser'.rand(1, 10000).'@example.com';
+        $name = 'Test User';
+
+        $this->addPaymentProviderForRendering();
+
+        // Mock SessionService to provide cart data
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+            $mock->shouldReceive('saveCartDto');
+        }));
+
+        $newUser = User::factory()->make(['email' => $email, 'name' => $name]);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn(null);
+        $mockUserService->shouldReceive('createUser')
+            ->with(['name' => $name, 'email' => $email])
+            ->andReturn($newUser);
+
+        $mockRegisterValidator = Mockery::mock(RegisterValidator::class);
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+        $mockRegisterValidator->shouldReceive('validate')
+            ->with(['name' => $name, 'email' => $email], false)
+            ->andReturn($validator);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $mockOtpService->shouldReceive('sendCode')
+            ->with($newUser)
+            ->andReturn(true);
+
+        $this->app->instance(UserService::class, $mockUserService);
+        $this->app->instance(RegisterValidator::class, $mockRegisterValidator);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        Livewire::test(ProductCheckoutForm::class)
+            ->set('email', $email)
+            ->set('name', $name)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
+    }
+
+    public function test_verify_otp_and_proceed_with_valid_code()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $product = OneTimeProduct::factory()->create([
+            'slug' => 'product-slug-otp-'.rand(1, 1000000),
+            'is_active' => true,
+        ]);
+
+        OneTimeProductPrice::create([
+            'one_time_product_id' => $product->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 50,
+        ]);
+
+        $email = 'existing'.rand(1, 10000).'@example.com';
+        $user = User::factory()->create(['email' => $email]);
+
+        $this->addPaymentProviderForRendering();
+
+        // Mock SessionService to provide cart data
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+            $mock->shouldReceive('saveCartDto');
+        }));
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn($user);
+
+        $this->app->instance(UserService::class, $mockUserService);
+
+        // Mock the OTP action to pass validation
+        $mockOtpAction = Mockery::mock(\Spatie\OneTimePasswords\Actions\ConsumeOneTimePasswordAction::class);
+        $mockOtpAction->shouldReceive('execute')
+            ->with($user, '123456', Mockery::any())
+            ->andReturn(\Spatie\OneTimePasswords\Enums\ConsumeOneTimePasswordResult::Ok);
+        $this->app->instance(\Spatie\OneTimePasswords\Actions\ConsumeOneTimePasswordAction::class, $mockOtpAction);
+
+        // Mock LoginService for authentication
+        $mockLoginService = Mockery::mock(\App\Services\LoginService::class);
+        $mockLoginService->shouldReceive('authenticateUser')
+            ->with($user, true)
+            ->andReturnUsing(function ($user) {
+                auth()->login($user);
+            });
+        $this->app->instance(\App\Services\LoginService::class, $mockLoginService);
+
+        Livewire::test(ProductCheckoutForm::class)
+            ->set('email', $email)
+            ->set('oneTimePassword', '123456')
+            ->call('verifyOtpAndProceed')
+            ->assertHasNoErrors();
+
+        $this->assertTrue(auth()->check());
+        $this->assertEquals($user->id, auth()->id());
+    }
+
+    public function test_is_checkout_button_enabled_with_otp_enabled()
+    {
+        config(['app.otp_login_enabled' => true]);
+
+        $product = OneTimeProduct::factory()->create([
+            'slug' => 'product-slug-otp-'.rand(1, 1000000),
+            'is_active' => true,
+        ]);
+
+        OneTimeProductPrice::create([
+            'one_time_product_id' => $product->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 50,
+        ]);
+
+        $this->addPaymentProviderForRendering();
+
+        // Mock SessionService to provide cart data
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+            $mock->shouldReceive('saveCartDto');
+        }));
+
+        // Test when not showing OTP form
+        $component = Livewire::test(ProductCheckoutForm::class);
+        $this->assertFalse($component->instance()->isCheckoutButtonEnabled());
+
+        // Test when showing OTP form but no email or OTP
+        $component->set('showOtpForm', true);
+        $this->assertFalse($component->instance()->isCheckoutButtonEnabled());
+
+        // Test when showing OTP form with email and OTP
+        $component->set('email', 'test@example.com')
+            ->set('oneTimePassword', '123456');
+        $this->assertTrue($component->instance()->isCheckoutButtonEnabled());
+    }
+
+    private function addPaymentProviderForRendering()
+    {
+        // find or create payment provider
+        PaymentProvider::updateOrCreate([
+            'slug' => 'paymore',
+        ], [
+            'name' => 'Paymore',
+            'is_active' => true,
+            'type' => 'any',
+        ]);
+        $mock = Mockery::mock(PaymentProviderInterface::class);
+        $mock->shouldReceive('isRedirectProvider')
+            ->andReturn(true);
+        $mock->shouldReceive('getSlug')
+            ->andReturn('paymore');
+        $mock->shouldReceive('getName')
+            ->andReturn('Paymore');
+        $mock->shouldReceive('isOverlayProvider')
+            ->andReturn(false);
+        $this->app->instance(PaymentProviderInterface::class, $mock);
+        $this->app->bind(PaymentService::class, function () use ($mock) {
+            return new PaymentService($mock);
+        });
+
+        return $mock;
+    }
+
+    protected function tearDown(): void
+    {
+        Mockery::close();
+        parent::tearDown();
+    }
+
+    private function addCartSession(OneTimeProduct $product)
+    {
+        $cartDto = new CartDto;
+        $cartDto->items = [
+            new CartItemDto($product->slug, 1),
+        ];
+
+        session()->put('cart', $cartDto);
     }
 }
