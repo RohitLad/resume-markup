@@ -1,5 +1,5 @@
 <div>
-    <div x-data="{ resendText: '{{ __('one-time-passwords::form.resend_code') }}', isResending: false }">
+    <div x-data="{ resendText: '{{ __('Resend Code') }}', isResending: false }">
         <h2 class="text-lg font-medium">
             {{ __('Login using one-time password') }}
         </h2>
@@ -30,7 +30,7 @@
                 @click="
                 if (!isResending) {
                     isResending = true;
-                    resendText = 'Code sent';
+                    resendText = '{{ __('Code sent') }}';
                     $wire.resendCode();
                     setTimeout(() => {
                         resendText = '{{ __('Resend code') }}';

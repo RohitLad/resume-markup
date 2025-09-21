@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class UserService
 {
@@ -12,7 +13,7 @@ class UserService
         return User::create([
             'name' => $data['name'],
             'email' => strtolower($data['email']),
-            'password' => Hash::make($data['password']),
+            'password' => isset($data['password']) ? Hash::make($data['password']) : Hash::make(Str::random(32)),
         ]);
     }
 

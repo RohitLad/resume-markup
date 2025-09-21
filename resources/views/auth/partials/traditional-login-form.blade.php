@@ -27,8 +27,8 @@
 
         @error('g-recaptcha-response')
         <span class="text-xs text-red-500" role="alert">
-                                {{ $message }}
-                            </span>
+                {{ $message }}
+            </span>
         @enderror
 
         @push('tail')

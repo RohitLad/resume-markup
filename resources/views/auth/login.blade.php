@@ -3,9 +3,11 @@
         <div class="flex flex-col py-2 md:p-10 gap-4 justify-center h-full items-center">
             <div class="card w-full md:max-w-xl bg-base-100 shadow-xl p-4 md:p-8">
 
-                <livewire:auth.login.one-time-password-login />
-
-{{--                @include('auth.partials.normal-login-form')--}}
+                @if($isOtpLoginEnabled)
+                    <livewire:auth.login.one-time-password-login />
+                @else
+                    @include('auth.partials.traditional-login-form')
+                @endif
 
             </div>
         </div>

@@ -2,12 +2,11 @@
 
 namespace App\Livewire\Auth\Register;
 
-use App\Models\User;
-use App\Services\RegistrationService;
+use App\Services\OneTimePasswordService;
 use App\Services\UserService;
 use App\Validator\RegisterValidator;
 use Illuminate\Contracts\View\View;
-use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 use Livewire\Component;
 
 class OneTimePasswordRegistration extends Component
@@ -16,20 +15,22 @@ class OneTimePasswordRegistration extends Component
 
     public string $name;
 
+    public $recaptcha;
+
     private RegisterValidator $registerValidator;
 
     private UserService $userService;
 
-    private RegistrationService $registrationService;
+    private OneTimePasswordService $oneTimePasswordService;
 
     public function boot(
         RegisterValidator $registerValidator,
         UserService $userService,
-        RegistrationService $registrationService,
+        OneTimePasswordService $oneTimePasswordService,
     ) {
         $this->registerValidator = $registerValidator;
         $this->userService = $userService;
-        $this->registrationService = $registrationService;
+        $this->oneTimePasswordService = $oneTimePasswordService;
     }
 
     public function render(): View
@@ -44,7 +45,16 @@ class OneTimePasswordRegistration extends Component
             'name' => $this->name,
         ];
 
-        $this->registerValidator->validate($userFields);
+        if (config('app.recaptcha_enabled')) {
+            $userFields[recaptchaFieldName()] = $this->recaptcha;
+        }
+
+        $validator = $this->registerValidator->validate($userFields);
+
+        if ($validator->fails()) {
+            $this->resetReCaptcha();
+            throw new ValidationException($validator);
+        }
 
         $user = $this->userService->findByEmail($this->email);
 
@@ -54,32 +64,19 @@ class OneTimePasswordRegistration extends Component
             return;
         }
 
-        $user = $this->registrationService->registerUser($userFields);
+        $user = $this->userService->createUser($userFields);
 
-        $this->sendCode($user);
+        if (! $this->oneTimePasswordService->sendCode($user)) {
+            $this->addError('email', __('Failed to send one-time password. Please try again later.'));
+
+            return;
+        }
 
         $this->redirect(route('login', ['email' => $this->email]));
     }
 
-    protected function sendCode(User $user): void
+    protected function resetReCaptcha()
     {
-        if ($this->rateLimitHit()) {
-            return;
-        }
-
-        $user->sendOneTimePassword();
-    }
-
-    protected function rateLimitHit(): bool
-    {
-        $rateLimitKey = "one-time-password-component-send-code.{$this->email}";
-
-        if (RateLimiter::tooManyAttempts($rateLimitKey, 3)) {
-            return true;
-        }
-
-        RateLimiter::hit($rateLimitKey, 60); // 60 seconds decay time
-
-        return false;
+        $this->dispatch('reset-recaptcha');
     }
 }

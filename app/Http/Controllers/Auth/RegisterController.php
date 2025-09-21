@@ -76,6 +76,8 @@ class RegisterController extends Controller
             Redirect::setIntendedUrl(url()->previous()); // make sure we redirect back to the page we came from
         }
 
-        return view('auth.register');
+        return view('auth.register', [
+            'isOtpLoginEnabled' => config('app.otp_login_enabled'),
+        ]);
     }
 }

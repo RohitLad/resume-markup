@@ -187,6 +187,8 @@ return [
 
     'recaptcha_enabled' => env('RECAPTCHA_ENABLED', false),
 
+    'otp_login_enabled' => env('OTP_LOGIN_ENABLED', false),
+
     'multiple_subscriptions_enabled' => env('MULTIPLE_SUBSCRIPTIONS_ENABLED', false),
 
     'two_factor_auth_enabled' => env('TWO_FACTOR_AUTH_ENABLED', true),

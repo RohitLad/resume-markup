@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Auth;
 use Laragear\TwoFactor\Facades\Auth2FA;
 
@@ -14,5 +15,14 @@ class LoginService
         }
 
         return Auth::guard()->attempt($credentials, $remember);
+    }
+
+    public function authenticateUser(User $user, bool $isEmailVerified = false): void
+    {
+        auth()->login($user);
+
+        if ($isEmailVerified && ! $user->hasVerifiedEmail()) {
+            $user->markEmailAsVerified();
+        }
     }
 }

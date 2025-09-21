@@ -13,7 +13,7 @@ class RegisterValidator
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
         ];
 
-        if (false) {  // todo: add a config option to enable/disable password during registration
+        if (! config('app.otp_login_enabled', false)) {
             $rules['password'] = ['required', 'string', 'min:8'];
 
             if ($passwordConfirmed) {

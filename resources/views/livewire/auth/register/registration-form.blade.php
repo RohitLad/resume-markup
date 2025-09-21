@@ -31,6 +31,8 @@
                 {{ __('We will send you a one-time login code to the email address provided.') }}
             </p>
 
+            @include('livewire.auth.partials.recaptcha')
+
         </div>
 
         <div>
