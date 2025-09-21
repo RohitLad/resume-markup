@@ -55,6 +55,8 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
             'totals' => $totals,
             'userExists' => $this->userExists($this->email),
             'paymentProviders' => $this->getPaymentProviders($paymentService),
+            'otpEnabled' => config('app.otp_login_enabled'),
+            'otpVerified' => $this->otpVerified,
         ]);
     }
 
@@ -69,6 +71,10 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
         try {
             parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userService, $loginService);
         } catch (LoginException $exception) { // 2fa is enabled, user has to go through typical login flow to enter 2fa code
+            return redirect()->route('login');
+        }
+
+        if (auth()->user() === null) {
             return redirect()->route('login');
         }
 
@@ -124,13 +130,17 @@ class ConvertLocalSubscriptionCheckoutForm extends CheckoutForm
             return redirect()->away($link);
         }
 
-        $this->dispatch('start-overlay-checkout',
-            paymentProvider: $paymentProvider->getSlug(),
-            initData: $initData,
-            successUrl: route('checkout.subscription.success'),
-            email: $user->email,
-            subscriptionUuid: $subscription->uuid,
-        );
+        if ($paymentProvider->isOverlayProvider()) {
+            return $this->dispatch('start-overlay-checkout',
+                paymentProvider: $paymentProvider->getSlug(),
+                initData: $initData,
+                successUrl: route('checkout.subscription.success'),
+                email: $user->email,
+                subscriptionUuid: $subscription->uuid,
+            );
+        }
+
+        return redirect()->route('checkout.subscription.success');
     }
 
     protected function getPaymentProviders(PaymentService $paymentService)

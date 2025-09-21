@@ -54,6 +54,8 @@ class LocalSubscriptionCheckoutForm extends CheckoutForm
             'userExists' => $this->userExists($this->email),
             'plan' => $plan,
             'totals' => $totals,
+            'otpEnabled' => config('app.otp_login_enabled'),
+            'otpVerified' => $this->otpVerified,
         ]);
     }
 
@@ -71,6 +73,10 @@ class LocalSubscriptionCheckoutForm extends CheckoutForm
         try {
             parent::handleLoginOrRegistration($loginValidator, $registerValidator, $userService, $loginService);
         } catch (LoginException $exception) { // 2fa is enabled, user has to go through typical login flow to enter 2fa code
+            return redirect()->route('login');
+        }
+
+        if (auth()->user() === null) {
             return redirect()->route('login');
         }
 
