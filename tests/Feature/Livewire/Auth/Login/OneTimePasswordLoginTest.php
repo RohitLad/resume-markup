@@ -140,6 +140,93 @@ class OneTimePasswordLoginTest extends FeatureTest
         $this->assertNotNull($user->fresh()->email_verified_at);
     }
 
+    public function test_authenticate_user_with_email_verification()
+    {
+        $user = User::factory()->create(['email_verified_at' => now()]);
+
+        $component = Livewire::test(OneTimePasswordLogin::class);
+        $component->instance()->authenticate($user);
+
+        $this->assertTrue(Auth::check());
+        $this->assertEquals($user->id, Auth::id());
+    }
+
+    public function test_submit_email_with_recaptcha_enabled()
+    {
+        config(['app.recaptcha_enabled' => true]);
+
+        $email = 'existing'.rand(1, 10000).'@example.com';
+        $recaptcha = 'test_recaptcha_token';
+        $user = User::factory()->create(['email' => $email]);
+
+        $expectedFields = [
+            'email' => $email,
+            'g-recaptcha-response' => $recaptcha,
+        ];
+
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+
+        $this->mockLoginValidator
+            ->shouldReceive('validate')
+            ->once()
+            ->with($expectedFields)
+            ->andReturn($validator);
+
+        $this->mockOtpService
+            ->shouldReceive('sendCode')
+            ->once()
+            ->withArgs(function ($userArg) use ($user) {
+                return $userArg->email === $user->email;
+            })
+            ->andReturn(true);
+
+        Livewire::test(OneTimePasswordLogin::class)
+            ->set('email', $email)
+            ->set('recaptcha', $recaptcha)
+            ->call('submitEmail')
+            ->assertSet('displayingEmailForm', false)
+            ->assertHasNoErrors();
+    }
+
+    public function test_submit_email_with_recaptcha_disabled()
+    {
+        config(['app.recaptcha_enabled' => false]);
+
+        $email = 'existing'.rand(1, 10000).'@example.com';
+        $recaptcha = 'test_recaptcha_token';
+        $user = User::factory()->create(['email' => $email]);
+
+        // When recaptcha is disabled, only email should be validated
+        $expectedFields = [
+            'email' => $email,
+        ];
+
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+
+        $this->mockLoginValidator
+            ->shouldReceive('validate')
+            ->once()
+            ->with($expectedFields)
+            ->andReturn($validator);
+
+        $this->mockOtpService
+            ->shouldReceive('sendCode')
+            ->once()
+            ->withArgs(function ($userArg) use ($user) {
+                return $userArg->email === $user->email;
+            })
+            ->andReturn(true);
+
+        Livewire::test(OneTimePasswordLogin::class)
+            ->set('email', $email)
+            ->set('recaptcha', $recaptcha)
+            ->call('submitEmail')
+            ->assertSet('displayingEmailForm', false)
+            ->assertHasNoErrors();
+    }
+
     protected function tearDown(): void
     {
         Mockery::close();
