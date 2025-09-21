@@ -670,6 +670,133 @@ class ProductCheckoutFormTest extends FeatureTest
         $this->assertTrue($component->instance()->isCheckoutButtonEnabled());
     }
 
+    public function test_send_otp_code_for_existing_user_with_recaptcha_enabled()
+    {
+        config(['app.otp_login_enabled' => true]);
+        config(['app.recaptcha_enabled' => true]);
+
+        $product = OneTimeProduct::factory()->create([
+            'slug' => 'product-slug-recaptcha-'.rand(1, 1000000),
+            'is_active' => true,
+        ]);
+
+        OneTimeProductPrice::create([
+            'one_time_product_id' => $product->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 50,
+        ]);
+
+        $email = 'existing'.rand(1, 10000).'@example.com';
+        $recaptcha = 'test_recaptcha_token';
+        $user = User::factory()->create(['email' => $email]);
+
+        $this->addPaymentProviderForRendering();
+
+        // Mock SessionService to provide cart data
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+            $mock->shouldReceive('saveCartDto');
+        }));
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn($user);
+
+        $mockLoginValidator = Mockery::mock(LoginValidator::class);
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+        $mockLoginValidator->shouldReceive('validate')
+            ->with(['email' => $email, 'g-recaptcha-response' => $recaptcha])
+            ->andReturn($validator);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $mockOtpService->shouldReceive('sendCode')
+            ->with($user)
+            ->andReturn(true);
+
+        $this->app->instance(UserService::class, $mockUserService);
+        $this->app->instance(LoginValidator::class, $mockLoginValidator);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        Livewire::test(ProductCheckoutForm::class)
+            ->set('email', $email)
+            ->set('recaptcha', $recaptcha)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
+    }
+
+    public function test_send_otp_code_for_new_user_with_recaptcha_enabled()
+    {
+        config(['app.otp_login_enabled' => true]);
+        config(['app.recaptcha_enabled' => true]);
+
+        $product = OneTimeProduct::factory()->create([
+            'slug' => 'product-slug-recaptcha-new-'.rand(1, 1000000),
+            'is_active' => true,
+        ]);
+
+        OneTimeProductPrice::create([
+            'one_time_product_id' => $product->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 50,
+        ]);
+
+        $email = 'newuser'.rand(1, 10000).'@example.com';
+        $name = 'Test User';
+        $recaptcha = 'test_recaptcha_token';
+        $newUser = User::factory()->make(['email' => $email, 'name' => $name]);
+
+        $this->addPaymentProviderForRendering();
+
+        // Mock SessionService to provide cart data
+        $this->instance(SessionService::class, Mockery::mock(SessionService::class, function (MockInterface $mock) use ($product) {
+            $cartDto = new CartDto;
+            $cartItem = new CartItemDto;
+            $cartItem->productId = $product->id;
+            $cartDto->items = [$cartItem];
+            $mock->shouldReceive('getCartDto')->andReturn($cartDto);
+            $mock->shouldReceive('saveCartDto');
+        }));
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $mockUserService->shouldReceive('findByEmail')
+            ->with($email)
+            ->andReturn(null);
+        $mockUserService->shouldReceive('createUser')
+            ->with(['name' => $name, 'email' => $email])
+            ->andReturn($newUser);
+
+        $mockRegisterValidator = Mockery::mock(RegisterValidator::class);
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+        $mockRegisterValidator->shouldReceive('validate')
+            ->with(['name' => $name, 'email' => $email, 'g-recaptcha-response' => $recaptcha], false)
+            ->andReturn($validator);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $mockOtpService->shouldReceive('sendCode')
+            ->with($newUser)
+            ->andReturn(true);
+
+        $this->app->instance(UserService::class, $mockUserService);
+        $this->app->instance(RegisterValidator::class, $mockRegisterValidator);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        Livewire::test(ProductCheckoutForm::class)
+            ->set('email', $email)
+            ->set('name', $name)
+            ->set('recaptcha', $recaptcha)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
+    }
+
     private function addPaymentProviderForRendering()
     {
         // find or create payment provider

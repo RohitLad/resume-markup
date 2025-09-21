@@ -21,6 +21,7 @@ use App\Services\PaymentProviders\PaymentProviderInterface;
 use App\Services\PaymentProviders\PaymentService;
 use App\Services\UserService;
 use App\Validator\LoginValidator;
+use App\Validator\RegisterValidator;
 use Exception;
 use Illuminate\Contracts\Validation\Validator;
 use Livewire\Livewire;
@@ -586,6 +587,161 @@ class ConvertLocalSubscriptionCheckoutFormTest extends FeatureTest
 
         $this->assertTrue(auth()->check());
         $this->assertEquals($existingUser->id, auth()->id());
+    }
+
+    public function test_send_otp_code_for_existing_user_with_recaptcha_enabled()
+    {
+        config(['app.otp_login_enabled' => true]);
+        config(['app.recaptcha_enabled' => true]);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $subscription = Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => SubscriptionStatus::ACTIVE,
+            'type' => SubscriptionType::LOCALLY_MANAGED,
+        ]);
+
+        $planSlug = 'premium-plan-'.rand(1, 1000000);
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $email = 'existing'.rand(1, 10000).'@example.com';
+        $recaptcha = 'test_recaptcha_token';
+        $existingUser = User::factory()->create(['email' => $email]);
+
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+
+        $mockLoginValidator = Mockery::mock(LoginValidator::class);
+        $this->app->instance(LoginValidator::class, $mockLoginValidator);
+
+        $mockLoginValidator
+            ->shouldReceive('validate')
+            ->once()
+            ->with(['email' => $email, 'g-recaptcha-response' => $recaptcha])
+            ->andReturn($validator);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $this->app->instance(UserService::class, $mockUserService);
+
+        $mockUserService
+            ->shouldReceive('findByEmail')
+            ->once()
+            ->with($email)
+            ->andReturn($existingUser);
+
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        $mockOtpService
+            ->shouldReceive('sendCode')
+            ->once()
+            ->with($existingUser)
+            ->andReturn(true);
+
+        Livewire::test(ConvertLocalSubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->set('recaptcha', $recaptcha)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
+    }
+
+    public function test_send_otp_code_for_new_user_with_recaptcha_enabled()
+    {
+        config(['app.otp_login_enabled' => true]);
+        config(['app.recaptcha_enabled' => true]);
+
+        $user = User::factory()->create();
+        $this->actingAs($user);
+
+        $subscription = Subscription::factory()->create([
+            'user_id' => $user->id,
+            'status' => SubscriptionStatus::ACTIVE,
+            'type' => SubscriptionType::LOCALLY_MANAGED,
+        ]);
+
+        $planSlug = 'premium-plan-'.rand(1, 1000000);
+        $sessionDto = new SubscriptionCheckoutDto;
+        $sessionDto->planSlug = $planSlug;
+        $this->withSession([SessionConstants::SUBSCRIPTION_CHECKOUT_DTO => $sessionDto]);
+
+        $plan = Plan::factory()->create(['slug' => $planSlug, 'is_active' => true]);
+
+        PlanPrice::create([
+            'plan_id' => $plan->id,
+            'currency_id' => Currency::where('code', 'USD')->first()->id,
+            'price' => 100,
+        ]);
+
+        $email = 'newuser'.rand(1, 10000).'@example.com';
+        $name = 'New User';
+        $recaptcha = 'test_recaptcha_token';
+        $userFields = [
+            'email' => $email,
+            'name' => $name,
+            'g-recaptcha-response' => $recaptcha,
+        ];
+
+        $user = User::factory()->make($userFields);
+
+        $validator = Mockery::mock(Validator::class);
+        $validator->shouldReceive('fails')->andReturn(false);
+
+        $mockRegisterValidator = Mockery::mock(RegisterValidator::class);
+        $this->app->instance(RegisterValidator::class, $mockRegisterValidator);
+
+        $mockUserService = Mockery::mock(UserService::class);
+        $this->app->instance(UserService::class, $mockUserService);
+        $mockOtpService = Mockery::mock(OneTimePasswordService::class);
+
+        $this->app->instance(OneTimePasswordService::class, $mockOtpService);
+
+        $mockRegisterValidator
+            ->shouldReceive('validate')
+            ->once()
+            ->with($userFields, false)
+            ->andReturn($validator);
+
+        $mockUserService
+            ->shouldReceive('findByEmail')
+            ->once()
+            ->with($email)
+            ->andReturn(null);
+
+        $mockUserService
+            ->shouldReceive('createUser')
+            ->once()
+            ->with([
+                'email' => $email,
+                'name' => $name,
+            ])
+            ->andReturn($user);
+
+        $mockOtpService
+            ->shouldReceive('sendCode')
+            ->once()
+            ->with($user)
+            ->andReturn(true);
+
+        Livewire::test(ConvertLocalSubscriptionCheckoutForm::class)
+            ->set('email', $email)
+            ->set('name', $name)
+            ->set('recaptcha', $recaptcha)
+            ->call('sendOtpCode')
+            ->assertSet('showOtpForm', true)
+            ->assertHasNoErrors();
     }
 
     protected function tearDown(): void
