@@ -27,8 +27,11 @@ class LoginValidator
         if (! config('app.two_factor_auth_enabled') || ! isset($fields['2fa_code'])) {
             $rules = [
                 'email' => 'required|string',
-                'password' => 'required|string',
             ];
+
+            if (! config('app.otp_login_enabled')) {
+                $rules['password'] = 'required|string';
+            }
         }
 
         if (config('app.recaptcha_enabled') && ! isset($fields['2fa_code'])) { // we want to avoid recaptcha validation when 2fa_code is present

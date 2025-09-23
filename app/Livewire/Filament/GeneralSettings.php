@@ -68,6 +68,7 @@ class GeneralSettings extends Component implements HasForms
             'recaptcha_enabled' => $this->configService->get('app.recaptcha_enabled', false),
             'recaptcha_api_site_key' => $this->configService->get('recaptcha.api_site_key', ''),
             'recaptcha_api_secret_key' => $this->configService->get('recaptcha.api_secret_key', ''),
+            'otp_login_enabled' => $this->configService->get('app.otp_login_enabled', false),
             'multiple_subscriptions_enabled' => $this->configService->get('app.multiple_subscriptions_enabled', false),
             'cookie_consent_enabled' => $this->configService->get('cookie-consent.enabled', false),
             'two_factor_auth_enabled' => $this->configService->get('app.two_factor_auth_enabled', false),
@@ -286,25 +287,34 @@ class GeneralSettings extends Component implements HasForms
                                 ->helperText(__('If enabled, the roadmap will be visible to the public.'))
                                 ->required(),
                         ]),
-                    Tab::make(__('Recaptcha'))
-                        ->icon('heroicon-o-shield-check')
-                        ->schema([
-                            Toggle::make('recaptcha_enabled')
-                                ->label(__('Recaptcha Enabled'))
-                                ->helperText(new HtmlString(__('If enabled, recaptcha will be used on the registration & login forms. For more info on how to configure Recaptcha, see the <a class="text-primary-500" href=":url" target="_blank">documentation</a>.', ['url' => 'https://saasykit.com/docs/recaptcha'])))
-                                ->required(),
-                            TextInput::make('recaptcha_api_site_key')
-                                ->label(__('Recaptcha Site Key')),
-                            TextInput::make('recaptcha_api_secret_key')
-                                ->label(__('Recaptcha Secret Key')),
-                        ]),
-                    Tab::make(__('Two Factor Authentication'))
+                    Tab::make(__('Authentication & Security'))
                         ->icon('heroicon-c-shield-check')
                         ->schema([
-                            Toggle::make('two_factor_auth_enabled')
-                                ->label(__('Two Factor Authentication Enabled'))
-                                ->helperText(__('If enabled, users will be able to enable two factor authentication on their account. If disabled, the 2FA field will not be shown on the login form even for users who have it enabled.'))
-                                ->required(),
+                            Section::make()
+                                ->schema([
+                                    Toggle::make('two_factor_auth_enabled')
+                                        ->label(__('Two Factor Authentication Enabled'))
+                                        ->helperText(__('If enabled, users will be able to enable two factor authentication on their account. If disabled, the 2FA field will not be shown on the login form even for users who have it enabled.'))
+                                        ->required(),
+                                ]),
+                            Section::make()
+                                ->schema([
+                                    Toggle::make('otp_login_enabled')
+                                        ->label(__('One-Time Password Login Enabled'))
+                                        ->helperText(__('If enabled, checkout forms will use one-time passwords sent via email instead of traditional passwords for login and registration.'))
+                                        ->required(),
+                                ]),
+                            Section::make()
+                                ->schema([
+                                    Toggle::make('recaptcha_enabled')
+                                        ->label(__('Recaptcha Enabled'))
+                                        ->helperText(new HtmlString(__('If enabled, recaptcha will be used on the registration & login forms. For more info on how to configure Recaptcha, see the <a class="text-primary-500" href=":url" target="_blank">documentation</a>.', ['url' => 'https://saasykit.com/docs/recaptcha'])))
+                                        ->required(),
+                                    TextInput::make('recaptcha_api_site_key')
+                                        ->label(__('Recaptcha Site Key')),
+                                    TextInput::make('recaptcha_api_secret_key')
+                                        ->label(__('Recaptcha Secret Key')),
+                                ]),
                         ]),
                     Tab::make(__('Social Links'))
                         ->icon('heroicon-o-heart')
@@ -363,6 +373,7 @@ class GeneralSettings extends Component implements HasForms
         $this->configService->set('app.multiple_subscriptions_enabled', $data['multiple_subscriptions_enabled']);
         $this->configService->set('cookie-consent.enabled', $data['cookie_consent_enabled']);
         $this->configService->set('app.two_factor_auth_enabled', $data['two_factor_auth_enabled']);
+        $this->configService->set('app.otp_login_enabled', $data['otp_login_enabled']);
         $this->configService->set('app.trial_without_payment.enabled', $data['trial_without_payment_enabled']);
         $this->configService->set('app.trial_without_payment.first_reminder_days', $data['trial_first_reminder_days'] ?? 3);
         $this->configService->set('app.trial_without_payment.second_reminder_days', $data['trial_second_reminder_days'] ?? 1);

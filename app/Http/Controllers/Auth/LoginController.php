@@ -40,7 +40,9 @@ class LoginController extends Controller
             Redirect::setIntendedUrl(url()->previous()); // make sure we redirect back to the page we came from
         }
 
-        return view('auth.login');
+        return view('auth.login', [
+            'isOtpLoginEnabled' => config('app.otp_login_enabled'),
+        ]);
     }
 
     protected function authenticated(Request $request, User $user)

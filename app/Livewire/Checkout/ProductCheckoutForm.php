@@ -53,6 +53,10 @@ class ProductCheckoutForm extends CheckoutForm
             return redirect()->route('login');
         }
 
+        if (auth()->user() === null) {
+            return redirect()->route('login');
+        }
+
         $cartDto = $this->sessionService->getCartDto();
 
         $discount = null;
@@ -123,6 +127,8 @@ class ProductCheckoutForm extends CheckoutForm
             'paymentProviders' => $this->getPaymentProviders($paymentService),
             'totals' => $totals,
             'requiresPayment' => $this->requiresPayment($totals),
+            'otpEnabled' => config('app.otp_login_enabled'),
+            'otpVerified' => $this->otpVerified,
         ]);
     }
 
