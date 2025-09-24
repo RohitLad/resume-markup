@@ -12,7 +12,6 @@ use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Illuminate\Support\HtmlString;
 use Livewire\Component;
 
 class InvoiceSettings extends Component implements HasForms
@@ -82,9 +81,7 @@ class InvoiceSettings extends Component implements HasForms
                                 ->color('gray')
                                 ->modalSubmitAction(false)
                                 ->modalCancelAction(false)
-                                ->modalContent()
-                                ->openUrlInNewTab()
-                                ->modalContent(function ($get) {
+                                ->url(function ($get) {
                                     $url = route('invoice.preview', [
                                         'serial_number_series' => $get('serial_number_series'),
                                         'seller_name' => $get('seller_name'),
@@ -94,9 +91,8 @@ class InvoiceSettings extends Component implements HasForms
                                         'seller_phone' => $get('seller_phone'),
                                     ]);
 
-                                    return new HtmlString('<iframe src="'.$url.'" class="w-full h-screen"></iframe>');
+                                    return $url;
                                 }),
-
                         ]),
                     ]),
 
