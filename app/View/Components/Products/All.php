@@ -26,7 +26,7 @@ class All extends Component
     protected function calculateViewData()
     {
         return [
-            'products' => $this->productService->getAllProductsWithPrices($this->sortBy, $this->sortDirection),
+            'products' => $this->productService->getAllProductsWithPrices($this->sortBy, $this->sortDirection, true),
         ];
     }
 }

@@ -75,6 +75,11 @@ class OneTimeProductResource extends Resource
                         ->helperText(__('If the product is not active, your customers will not be able to purchase it.'))
                         ->default(true)
                         ->label(__('Active')),
+                    Toggle::make('is_visible')
+                        ->label(__('Is Visible'))
+                        ->default(true)
+                        ->helperText('If true, then this product will be visible in the components that show the products on the frontend. If this is disabled, this product will be hidden in the components that show the products on the frontend, but users who have the product URL will still be able to purchase it.')
+                        ->required(),
                     KeyValue::make('metadata')
                         ->label(__('Metadata'))
                         ->helperText(__('Add any additional data to this product. You can use this to store product features that could later be retrieved to serve your users.'))

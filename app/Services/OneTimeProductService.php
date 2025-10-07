@@ -68,7 +68,7 @@ class OneTimeProductService
             ->first();
     }
 
-    public function getAllProductsWithPrices(string $sortBy = 'name', string $sortDirection = 'asc'): Collection
+    public function getAllProductsWithPrices(string $sortBy = 'name', string $sortDirection = 'asc', bool $onlyVisible = false): Collection
     {
         $sortBy = in_array($sortBy, ['id', 'price', 'name', 'created_at', 'updated_at']) ? $sortBy : 'id';
         $sortDirection = in_array($sortDirection, ['asc', 'desc']) ? $sortDirection : 'asc';
@@ -87,6 +87,10 @@ class OneTimeProductService
                 ->select('one_time_products.*');
         } else {
             $query->orderBy($sortBy, $sortDirection);
+        }
+
+        if ($onlyVisible) {
+            $query->where('is_visible', true);
         }
 
         $query->with([
