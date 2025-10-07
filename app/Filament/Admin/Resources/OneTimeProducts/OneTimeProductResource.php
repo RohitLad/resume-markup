@@ -11,7 +11,6 @@ use App\Models\OneTimeProduct;
 use Filament\Actions\EditAction;
 use Filament\Forms\Components\KeyValue;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
@@ -81,7 +80,6 @@ class OneTimeProductResource extends Resource
                         ->default(true)
                         ->helperText('If true, then this product will be visible in the components that show the products on the frontend. If this is disabled, this product will be hidden in the components that show the products on the frontend, but users who have the product URL will still be able to purchase it.')
                         ->required(),
-                    RichEditor::make('description'),
                     KeyValue::make('metadata')
                         ->label(__('Metadata'))
                         ->helperText(__('Add any additional data to this product. You can use this to store product features that could later be retrieved to serve your users.'))
