@@ -139,7 +139,7 @@ class PlanService
         return Product::where('is_default', true)->first();
     }
 
-    public function getAllPlansWithPrices(array $productSlugs = [], ?string $planType = null)
+    public function getAllPlansWithPrices(array $productSlugs = [], ?string $planType = null, bool $onlyVisible = false)
     {
         $currencyObject = $this->currencyService->getCurrency();
 
@@ -163,6 +163,10 @@ class PlanService
                 $result->where('type', $planType);
             }
 
+            if ($onlyVisible) {
+                $result->where('is_visible', true);
+            }
+
             $result->with([
                 'interval',
                 'product',
@@ -184,6 +188,10 @@ class PlanService
 
         if ($planType) {
             $result->where('type', $planType);
+        }
+
+        if ($onlyVisible) {
+            $result->where('is_visible', true);
         }
 
         $result->with([

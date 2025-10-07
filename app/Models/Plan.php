@@ -24,6 +24,7 @@ class Plan extends Model
         'trial_interval_count',
         'is_active',
         'type',
+        'is_visible',
     ];
 
     public function product(): BelongsTo

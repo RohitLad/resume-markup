@@ -30,6 +30,7 @@ class All extends \App\View\Components\Plans\All
         $plans = $this->planService->getAllPlansWithPrices(
             $this->products,
             $planType,
+            onlyVisible: true,
         );
 
         $viewData['subscription'] = $subscription;

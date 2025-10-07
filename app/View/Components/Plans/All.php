@@ -34,6 +34,7 @@ class All extends Component
     {
         $plans = $this->planService->getAllPlansWithPrices(
             $this->products,
+            onlyVisible: true,
         );
 
         return $this->enrichViewData([], $plans);

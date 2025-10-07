@@ -185,7 +185,13 @@ class PlanResource extends Resource
                     ),
                     Toggle::make('is_active')
                         ->label(__('Is Active'))
+                        ->helperText('Whether the plan should be active or not.')
                         ->default(true)
+                        ->required(),
+                    Toggle::make('is_visible')
+                        ->label(__('Is Visible'))
+                        ->default(true)
+                        ->helperText('If true, then this plan will be visible in the components that show the plans on the frontend. If this is disabled, the plan will be hidden in the components that show the plans on the frontend, but users who have the plan URL will still be able to purchase it.')
                         ->required(),
                     RichEditor::make('description'),
                 ])->columnSpanFull(),
