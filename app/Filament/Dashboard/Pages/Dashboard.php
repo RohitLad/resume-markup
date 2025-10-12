@@ -31,6 +31,7 @@ class Dashboard extends Page implements HasForms
                 FileUpload::make('resume')
                 ->directory('resumes')
                 ->previewable(true)
+                ->storeFile(false)
             ])
             ->statePath('data');
     }
