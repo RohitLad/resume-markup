@@ -15,7 +15,6 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->json('data')->nullable();
             $table->timestamps();
-            $table->uuid('user_id');
             $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->unique('user_id');
         });
