@@ -183,4 +183,9 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail, Two
     {
         return $this->hasOne(Address::class);
     }
+
+    public function profile(): HasOne
+    {
+        return $this->hasOne(Profile::class);
+    }
 }

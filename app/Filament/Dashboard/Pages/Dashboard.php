@@ -2,6 +2,7 @@
 
 namespace App\Filament\Dashboard\Pages;
 
+use App\Services\OpenAIService;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\TextInput;
@@ -32,8 +33,22 @@ class Dashboard extends Page implements HasForms
                 ->directory('resumes')
                 ->previewable(true)
                 ->storeFile(false)
+                ->acceptedFileTypes('application/pdf')
+                ->afterStateUpdated(function ($state, callable $set){
+                    if ($state){
+                        $this->processResumeFile($state, $set);
+                    }
+                })
             ])
             ->statePath('data');
+    }
+
+    protected function processResumeFile($file, callable $set): void
+    {
+        $openAIService = app(OpenAIService::class);
+        $parsedData = $openAIService->parseResumePdf($file->getRealPath());
+
+        
     }
 
     public function create(): void
