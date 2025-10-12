@@ -110,4 +110,9 @@ return [
         'api_key' => env('N8N_API_KEY'),
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+        'assistant_id' => env('OPENAI_ASSISTANT_ID'),
+    ],
+
 ];
