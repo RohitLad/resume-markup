@@ -15,7 +15,8 @@ use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use BackedEnum;
-use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Tabs;
 
 class Dashboard extends Page implements HasForms
 {
@@ -42,7 +43,7 @@ class Dashboard extends Page implements HasForms
         $this->form->fill($this->data);
     }
 
-    public function form( $form)
+    public function form($form)
     {
         return $form
             ->schema([
@@ -57,358 +58,552 @@ class Dashboard extends Page implements HasForms
                         }
                     })
                     ->live()
+                    ->helperText('Upload your resume and we\'ll automatically extract the information')
                     ->columnSpanFull(),
 
-                // Basics Section
-                Section::make('Basic Information')
-                    ->schema([
-                        TextInput::make('basics.name')
-                            ->label('Full Name')
-                            ->required(),
-                        TextInput::make('basics.label')
-                            ->label('Professional Title'),
-                        TextInput::make('basics.email')
-                            ->label('Email')
-                            ->email(),
-                        TextInput::make('basics.phone')
-                            ->label('Phone')
-                            ->tel(),
-                        TextInput::make('basics.url')
-                            ->label('Website')
-                            ->url(),
-                        TextInput::make('basics.image')
-                            ->label('Profile Image URL')
-                            ->url(),
-                        Textarea::make('basics.summary')
-                            ->label('Professional Summary')
-                            ->rows(4)
-                            ->columnSpanFull(),
-                        
-                        // Location
-                        Section::make('Location')
+                Tabs::make('Resume Sections')
+                    ->tabs([
+                        // Personal Information Tab
+                        Tabs\Tab::make('Personal')
+                            ->icon('heroicon-o-user')
                             ->schema([
-                                TextInput::make('basics.location.address')
-                                    ->label('Address'),
-                                TextInput::make('basics.location.city')
-                                    ->label('City'),
-                                TextInput::make('basics.location.region')
-                                    ->label('State/Region'),
-                                TextInput::make('basics.location.postalCode')
-                                    ->label('Postal Code'),
-                                TextInput::make('basics.location.countryCode')
-                                    ->label('Country Code')
-                                    ->maxLength(2),
-                            ])
-                            ->columns(2)
-                            ->collapsible(),
-                        
-                        // Social Profiles
-                        Repeater::make('basics.profiles')
-                            ->label('Social Profiles')
-                            ->schema([
-                                TextInput::make('network')
-                                    ->label('Network')
-                                    ->placeholder('LinkedIn, Twitter, GitHub, etc.'),
-                                TextInput::make('username')
-                                    ->label('Username'),
-                                TextInput::make('url')
-                                    ->label('Profile URL')
-                                    ->url(),
-                            ])
-                            ->columns(3)
-                            ->collapsible()
-                            ->columnSpanFull(),
-                    ])
-                    ->columns(2)
-                    ->visible($this->showForm),
-
-                // Work Experience
-                Section::make('Work Experience')
-                    ->schema([
-                        Repeater::make('work')
-                            ->schema([
-                                TextInput::make('name')
-                                    ->label('Company Name')
-                                    ->required(),
-                                TextInput::make('position')
-                                    ->label('Position')
-                                    ->required(),
-                                TextInput::make('url')
-                                    ->label('Company Website')
-                                    ->url(),
-                                DatePicker::make('startDate')
-                                    ->label('Start Date'),
-                                DatePicker::make('endDate')
-                                    ->label('End Date'),
-                                Textarea::make('summary')
-                                    ->label('Description')
-                                    ->rows(3)
+                                Grid::make(2)
+                                    ->schema([
+                                        TextInput::make('basics.name')
+                                            ->label('Full Name')
+                                            ->required()
+                                            ->placeholder('John Doe')
+                                            ->prefixIcon('heroicon-o-user'),
+                                        
+                                        TextInput::make('basics.label')
+                                            ->label('Professional Title')
+                                            ->placeholder('Senior Software Engineer')
+                                            ->prefixIcon('heroicon-o-briefcase'),
+                                        
+                                        TextInput::make('basics.email')
+                                            ->label('Email')
+                                            ->email()
+                                            ->placeholder('john@example.com')
+                                            ->prefixIcon('heroicon-o-envelope'),
+                                        
+                                        TextInput::make('basics.phone')
+                                            ->label('Phone')
+                                            ->tel()
+                                            ->placeholder('+1 (555) 123-4567')
+                                            ->prefixIcon('heroicon-o-phone'),
+                                        
+                                        TextInput::make('basics.url')
+                                            ->label('Website')
+                                            ->url()
+                                            ->placeholder('https://johndoe.com')
+                                            ->prefixIcon('heroicon-o-globe-alt'),
+                                        
+                                        TextInput::make('basics.image')
+                                            ->label('Profile Image URL')
+                                            ->url()
+                                            ->placeholder('https://example.com/photo.jpg')
+                                            ->prefixIcon('heroicon-o-photo'),
+                                    ]),
+                                
+                                Textarea::make('basics.summary')
+                                    ->label('Professional Summary')
+                                    ->rows(4)
+                                    ->placeholder('Write a brief summary about yourself and your professional experience...')
                                     ->columnSpanFull(),
-                                TagsInput::make('highlights')
-                                    ->label('Key Achievements')
-                                    ->placeholder('Add achievement')
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(2)
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['position'] ?? null)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
+                                
+                                Grid::make(2)
+                                    ->schema([
+                                        TextInput::make('basics.location.address')
+                                            ->label('Address')
+                                            ->placeholder('123 Main Street'),
+                                        
+                                        TextInput::make('basics.location.city')
+                                            ->label('City')
+                                            ->placeholder('New York'),
+                                        
+                                        TextInput::make('basics.location.region')
+                                            ->label('State/Region')
+                                            ->placeholder('NY'),
+                                        
+                                        TextInput::make('basics.location.postalCode')
+                                            ->label('Postal Code')
+                                            ->placeholder('10001'),
+                                        
+                                        TextInput::make('basics.location.countryCode')
+                                            ->label('Country Code')
+                                            ->maxLength(2)
+                                            ->placeholder('US'),
+                                    ]),
+                                
+                                Repeater::make('basics.profiles')
+                                    ->label('Social Profiles')
+                                    ->schema([
+                                        TextInput::make('network')
+                                            ->label('Network')
+                                            ->placeholder('LinkedIn, Twitter, GitHub, etc.')
+                                            ->required(),
+                                        
+                                        TextInput::make('username')
+                                            ->label('Username')
+                                            ->placeholder('johndoe'),
+                                        
+                                        TextInput::make('url')
+                                            ->label('Profile URL')
+                                            ->url()
+                                            ->placeholder('https://linkedin.com/in/johndoe'),
+                                    ])
+                                    ->columns(3)
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Social Profile')
+                                    ->columnSpanFull()
+                                    ->itemLabel(fn (array $state): ?string => $state['network'] ?? 'Social Profile'),
+                            ]),
 
-                // Education
-                Section::make('Education')
-                    ->schema([
-                        Repeater::make('education')
+                        // Work Experience Tab
+                        Tabs\Tab::make('Experience')
+                            ->icon('heroicon-o-briefcase')
+                            ->badge(fn () => count($this->data['work'] ?? []))
                             ->schema([
-                                TextInput::make('institution')
-                                    ->label('Institution')
-                                    ->required(),
-                                TextInput::make('url')
-                                    ->label('Institution Website')
-                                    ->url(),
-                                TextInput::make('area')
-                                    ->label('Field of Study'),
-                                TextInput::make('studyType')
-                                    ->label('Degree Type'),
-                                DatePicker::make('startDate')
-                                    ->label('Start Date'),
-                                DatePicker::make('endDate')
-                                    ->label('End Date'),
-                                TextInput::make('score')
-                                    ->label('GPA/Score'),
-                                TagsInput::make('courses')
-                                    ->label('Relevant Courses')
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(2)
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['institution'] ?? null)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
+                                Repeater::make('work')
+                                    ->label('Work Experience')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('name')
+                                                    ->label('Company Name')
+                                                    ->required()
+                                                    ->placeholder('Acme Corporation'),
+                                                
+                                                TextInput::make('position')
+                                                    ->label('Position')
+                                                    ->required()
+                                                    ->placeholder('Senior Software Engineer'),
+                                                
+                                                TextInput::make('url')
+                                                    ->label('Company Website')
+                                                    ->url()
+                                                    ->placeholder('https://acme.com'),
+                                                
+                                                Grid::make(2)
+                                                    ->schema([
+                                                        DatePicker::make('startDate')
+                                                            ->label('Start Date')
+                                                            ->native(false),
+                                                        
+                                                        DatePicker::make('endDate')
+                                                            ->label('End Date')
+                                                            ->native(false)
+                                                            ->placeholder('Present'),
+                                                    ]),
+                                            ]),
+                                        
+                                        Textarea::make('summary')
+                                            ->label('Description')
+                                            ->rows(3)
+                                            ->placeholder('Describe your role and responsibilities...')
+                                            ->columnSpanFull(),
+                                        
+                                        TagsInput::make('highlights')
+                                            ->label('Key Achievements')
+                                            ->placeholder('Add achievement and press Enter')
+                                            ->helperText('Press Enter after typing each achievement')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Work Experience')
+                                    ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => 
+                                        ($state['position'] ?? 'Position') . ' at ' . ($state['name'] ?? 'Company')
+                                    )
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                            ]),
 
-                // Skills
-                Section::make('Skills')
-                    ->schema([
-                        Repeater::make('skills')
+                        // Education Tab
+                        Tabs\Tab::make('Education')
+                            ->icon('heroicon-o-academic-cap')
+                            ->badge(fn () => count($this->data['education'] ?? []))
                             ->schema([
-                                TextInput::make('name')
-                                    ->label('Skill Category')
-                                    ->required(),
-                                TextInput::make('level')
-                                    ->label('Proficiency Level')
-                                    ->placeholder('Beginner, Intermediate, Advanced, Master'),
-                                TagsInput::make('keywords')
-                                    ->label('Skills')
-                                    ->placeholder('Add skill')
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(2)
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
+                                Repeater::make('education')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('institution')
+                                                    ->label('Institution')
+                                                    ->required()
+                                                    ->placeholder('University of Example'),
+                                                
+                                                TextInput::make('url')
+                                                    ->label('Institution Website')
+                                                    ->url()
+                                                    ->placeholder('https://university.edu'),
+                                                
+                                                TextInput::make('area')
+                                                    ->label('Field of Study')
+                                                    ->placeholder('Computer Science'),
+                                                
+                                                TextInput::make('studyType')
+                                                    ->label('Degree Type')
+                                                    ->placeholder('Bachelor of Science'),
+                                                
+                                                DatePicker::make('startDate')
+                                                    ->label('Start Date')
+                                                    ->native(false),
+                                                
+                                                DatePicker::make('endDate')
+                                                    ->label('End Date')
+                                                    ->native(false),
+                                                
+                                                TextInput::make('score')
+                                                    ->label('GPA/Score')
+                                                    ->placeholder('3.8/4.0'),
+                                            ]),
+                                        
+                                        TagsInput::make('courses')
+                                            ->label('Relevant Courses')
+                                            ->placeholder('Add course and press Enter')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Education')
+                                    ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => 
+                                        ($state['studyType'] ?? 'Degree') . ' - ' . ($state['institution'] ?? 'Institution')
+                                    )
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                            ]),
 
-                // Projects
-                Section::make('Projects')
-                    ->schema([
-                        Repeater::make('projects')
+                        // Skills Tab
+                        Tabs\Tab::make('Skills')
+                            ->icon('heroicon-o-sparkles')
+                            ->badge(fn () => count($this->data['skills'] ?? []))
                             ->schema([
-                                TextInput::make('name')
-                                    ->label('Project Name')
-                                    ->required(),
-                                TextInput::make('url')
-                                    ->label('Project URL')
-                                    ->url(),
-                                DatePicker::make('startDate')
-                                    ->label('Start Date'),
-                                DatePicker::make('endDate')
-                                    ->label('End Date'),
-                                Textarea::make('description')
-                                    ->label('Description')
-                                    ->rows(3)
-                                    ->columnSpanFull(),
-                                TagsInput::make('highlights')
-                                    ->label('Key Highlights')
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(2)
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
+                                Repeater::make('skills')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('name')
+                                                    ->label('Skill Category')
+                                                    ->required()
+                                                    ->placeholder('Programming Languages'),
+                                                
+                                                TextInput::make('level')
+                                                    ->label('Proficiency Level')
+                                                    ->placeholder('Advanced')
+                                                    ->datalist([
+                                                        'Beginner',
+                                                        'Intermediate',
+                                                        'Advanced',
+                                                        'Expert',
+                                                        'Master',
+                                                    ]),
+                                            ]),
+                                        
+                                        TagsInput::make('keywords')
+                                            ->label('Skills')
+                                            ->placeholder('Add skill and press Enter')
+                                            ->helperText('Add individual skills in this category')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Skill Category')
+                                    ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => 
+                                        ($state['name'] ?? 'Skill Category') . 
+                                        ($state['level'] ? ' (' . $state['level'] . ')' : '')
+                                    )
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                            ]),
 
-                // Languages
-                Section::make('Languages')
-                    ->schema([
-                        Repeater::make('languages')
+                        // Projects Tab
+                        Tabs\Tab::make('Projects')
+                            ->icon('heroicon-o-rocket-launch')
+                            ->badge(fn () => count($this->data['projects'] ?? []))
                             ->schema([
-                                TextInput::make('language')
-                                    ->label('Language')
-                                    ->required(),
-                                TextInput::make('fluency')
-                                    ->label('Fluency Level')
-                                    ->placeholder('Native, Fluent, Intermediate, Basic'),
-                            ])
-                            ->columns(2)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
+                                Repeater::make('projects')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('name')
+                                                    ->label('Project Name')
+                                                    ->required()
+                                                    ->placeholder('Awesome Project'),
+                                                
+                                                TextInput::make('url')
+                                                    ->label('Project URL')
+                                                    ->url()
+                                                    ->placeholder('https://github.com/user/project'),
+                                                
+                                                DatePicker::make('startDate')
+                                                    ->label('Start Date')
+                                                    ->native(false),
+                                                
+                                                DatePicker::make('endDate')
+                                                    ->label('End Date')
+                                                    ->native(false)
+                                                    ->placeholder('Ongoing'),
+                                            ]),
+                                        
+                                        Textarea::make('description')
+                                            ->label('Description')
+                                            ->rows(3)
+                                            ->placeholder('Describe the project, your role, and technologies used...')
+                                            ->columnSpanFull(),
+                                        
+                                        TagsInput::make('highlights')
+                                            ->label('Key Highlights')
+                                            ->placeholder('Add highlight and press Enter')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Project')
+                                    ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Project')
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                            ]),
 
-                // Certificates
-                Section::make('Certificates')
-                    ->schema([
-                        Repeater::make('certificates')
+                        // Certificates & Awards Tab
+                        Tabs\Tab::make('Certificates & Awards')
+                            ->icon('heroicon-o-trophy')
+                            ->badge(fn () => count($this->data['certificates'] ?? []) + count($this->data['awards'] ?? []))
                             ->schema([
-                                TextInput::make('name')
-                                    ->label('Certificate Name')
-                                    ->required(),
-                                TextInput::make('issuer')
-                                    ->label('Issuing Organization'),
-                                DatePicker::make('date')
-                                    ->label('Issue Date'),
-                                TextInput::make('url')
-                                    ->label('Certificate URL')
-                                    ->url(),
-                            ])
-                            ->columns(2)
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
+                                Repeater::make('certificates')
+                                    ->label('Certificates')
+                                    ->schema([
+                                        Grid::make(3)
+                                            ->schema([
+                                                TextInput::make('name')
+                                                    ->label('Certificate Name')
+                                                    ->required()
+                                                    ->placeholder('AWS Certified Solutions Architect'),
+                                                
+                                                TextInput::make('issuer')
+                                                    ->label('Issuing Organization')
+                                                    ->placeholder('Amazon Web Services'),
+                                                
+                                                DatePicker::make('date')
+                                                    ->label('Issue Date')
+                                                    ->native(false),
+                                                
+                                                TextInput::make('url')
+                                                    ->label('Certificate URL')
+                                                    ->url()
+                                                    ->placeholder('https://credentials.example.com')
+                                                    ->columnSpan(3),
+                                            ]),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Certificate')
+                                    ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Certificate')
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                                
+                                Repeater::make('awards')
+                                    ->label('Awards')
+                                    ->schema([
+                                        Grid::make(3)
+                                            ->schema([
+                                                TextInput::make('title')
+                                                    ->label('Award Title')
+                                                    ->required()
+                                                    ->placeholder('Employee of the Year'),
+                                                
+                                                TextInput::make('awarder')
+                                                    ->label('Awarded By')
+                                                    ->placeholder('Acme Corporation'),
+                                                
+                                                DatePicker::make('date')
+                                                    ->label('Date')
+                                                    ->native(false),
+                                            ]),
+                                        
+                                        Textarea::make('summary')
+                                            ->label('Description')
+                                            ->rows(2)
+                                            ->placeholder('Describe the award and why you received it...')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Award')
+                                    ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => $state['title'] ?? 'Award')
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                            ]),
 
-                // Awards
-                Section::make('Awards')
-                    ->schema([
-                        Repeater::make('awards')
+                        // Additional Info Tab
+                        Tabs\Tab::make('Additional')
+                            ->icon('heroicon-o-information-circle')
                             ->schema([
-                                TextInput::make('title')
-                                    ->label('Award Title')
-                                    ->required(),
-                                TextInput::make('awarder')
-                                    ->label('Awarded By'),
-                                DatePicker::make('date')
-                                    ->label('Date'),
-                                Textarea::make('summary')
-                                    ->label('Description')
-                                    ->rows(2)
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(3)
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['title'] ?? null)
-                            ->columnSpanFull(),
+                                Repeater::make('languages')
+                                    ->label('Languages')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('language')
+                                                    ->label('Language')
+                                                    ->required()
+                                                    ->placeholder('English'),
+                                                
+                                                TextInput::make('fluency')
+                                                    ->label('Fluency Level')
+                                                    ->placeholder('Native')
+                                                    ->datalist([
+                                                        'Native',
+                                                        'Fluent',
+                                                        'Professional',
+                                                        'Intermediate',
+                                                        'Basic',
+                                                    ]),
+                                            ]),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Language')
+                                    ->itemLabel(fn (array $state): ?string => 
+                                        ($state['language'] ?? 'Language') . 
+                                        ($state['fluency'] ? ' - ' . $state['fluency'] : '')
+                                    )
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                                
+                                Repeater::make('volunteer')
+                                    ->label('Volunteer Experience')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('organization')
+                                                    ->label('Organization')
+                                                    ->required()
+                                                    ->placeholder('Red Cross'),
+                                                
+                                                TextInput::make('position')
+                                                    ->label('Role')
+                                                    ->placeholder('Volunteer Coordinator'),
+                                                
+                                                TextInput::make('url')
+                                                    ->label('Organization Website')
+                                                    ->url()
+                                                    ->placeholder('https://organization.org'),
+                                                
+                                                Grid::make(2)
+                                                    ->schema([
+                                                        DatePicker::make('startDate')
+                                                            ->label('Start Date')
+                                                            ->native(false),
+                                                        
+                                                        DatePicker::make('endDate')
+                                                            ->label('End Date')
+                                                            ->native(false),
+                                                    ]),
+                                            ]),
+                                        
+                                        Textarea::make('summary')
+                                            ->label('Description')
+                                            ->rows(2)
+                                            ->placeholder('Describe your volunteer work...')
+                                            ->columnSpanFull(),
+                                        
+                                        TagsInput::make('highlights')
+                                            ->label('Key Contributions')
+                                            ->placeholder('Add contribution and press Enter')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Volunteer Experience')
+                                    ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => 
+                                        ($state['position'] ?? 'Role') . ' at ' . ($state['organization'] ?? 'Organization')
+                                    )
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                                
+                                Repeater::make('publications')
+                                    ->label('Publications')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('name')
+                                                    ->label('Publication Title')
+                                                    ->required()
+                                                    ->placeholder('My Research Paper'),
+                                                
+                                                TextInput::make('publisher')
+                                                    ->label('Publisher')
+                                                    ->placeholder('IEEE'),
+                                                
+                                                DatePicker::make('releaseDate')
+                                                    ->label('Release Date')
+                                                    ->native(false),
+                                                
+                                                TextInput::make('url')
+                                                    ->label('Publication URL')
+                                                    ->url()
+                                                    ->placeholder('https://doi.org/...'),
+                                            ]),
+                                        
+                                        Textarea::make('summary')
+                                            ->label('Summary')
+                                            ->rows(2)
+                                            ->placeholder('Brief summary of the publication...')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Publication')
+                                    ->collapsible()
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Publication')
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                                
+                                Repeater::make('interests')
+                                    ->label('Interests')
+                                    ->schema([
+                                        Grid::make(2)
+                                            ->schema([
+                                                TextInput::make('name')
+                                                    ->label('Interest')
+                                                    ->required()
+                                                    ->placeholder('Artificial Intelligence'),
+                                                
+                                                TagsInput::make('keywords')
+                                                    ->label('Keywords')
+                                                    ->placeholder('Add keyword and press Enter'),
+                                            ]),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Interest')
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Interest')
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                                
+                                Repeater::make('references')
+                                    ->label('References')
+                                    ->schema([
+                                        TextInput::make('name')
+                                            ->label('Reference Name')
+                                            ->required()
+                                            ->placeholder('Jane Smith'),
+                                        
+                                        Textarea::make('reference')
+                                            ->label('Reference Text')
+                                            ->rows(2)
+                                            ->placeholder('What this person says about you...')
+                                            ->columnSpanFull(),
+                                    ])
+                                    ->defaultItems(0)
+                                    ->addActionLabel('Add Reference')
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Reference')
+                                    ->columnSpanFull()
+                                    ->reorderable(),
+                            ]),
                     ])
-                    ->collapsible()
-                    ->visible($this->showForm),
-
-                // Volunteer Experience
-                Section::make('Volunteer Experience')
-                    ->schema([
-                        Repeater::make('volunteer')
-                            ->schema([
-                                TextInput::make('organization')
-                                    ->label('Organization')
-                                    ->required(),
-                                TextInput::make('position')
-                                    ->label('Role'),
-                                TextInput::make('url')
-                                    ->label('Organization Website')
-                                    ->url(),
-                                DatePicker::make('startDate')
-                                    ->label('Start Date'),
-                                DatePicker::make('endDate')
-                                    ->label('End Date'),
-                                Textarea::make('summary')
-                                    ->label('Description')
-                                    ->rows(2)
-                                    ->columnSpanFull(),
-                                TagsInput::make('highlights')
-                                    ->label('Key Contributions')
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(2)
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['organization'] ?? null)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
-
-                // Publications
-                Section::make('Publications')
-                    ->schema([
-                        Repeater::make('publications')
-                            ->schema([
-                                TextInput::make('name')
-                                    ->label('Publication Title')
-                                    ->required(),
-                                TextInput::make('publisher')
-                                    ->label('Publisher'),
-                                DatePicker::make('releaseDate')
-                                    ->label('Release Date'),
-                                TextInput::make('url')
-                                    ->label('Publication URL')
-                                    ->url(),
-                                Textarea::make('summary')
-                                    ->label('Summary')
-                                    ->rows(2)
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(2)
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
-
-                // Interests
-                Section::make('Interests')
-                    ->schema([
-                        Repeater::make('interests')
-                            ->schema([
-                                TextInput::make('name')
-                                    ->label('Interest')
-                                    ->required(),
-                                TagsInput::make('keywords')
-                                    ->label('Keywords'),
-                            ])
-                            ->columns(2)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
-
-                // References
-                Section::make('References')
-                    ->schema([
-                        Repeater::make('references')
-                            ->schema([
-                                TextInput::make('name')
-                                    ->label('Reference Name')
-                                    ->required(),
-                                Textarea::make('reference')
-                                    ->label('Reference Text')
-                                    ->rows(2)
-                                    ->columnSpanFull(),
-                            ])
-                            ->collapsible()
-                            ->itemLabel(fn (array $state): ?string => $state['name'] ?? null)
-                            ->columnSpanFull(),
-                    ])
-                    ->collapsible()
-                    ->visible($this->showForm),
+                    ->contained(false)
+                    ->persistTabInQueryString()
+                    ->visible($this->showForm)
+                    ->columnSpanFull(),
             ])
             ->statePath('data');
     }
@@ -435,6 +630,7 @@ class Dashboard extends Page implements HasForms
                 ->success()
                 ->title('Resume Processed')
                 ->body('Your resume has been processed successfully. You can now edit the extracted data.')
+                ->duration(5000)
                 ->send();
                 
         } catch (\Exception $e) {
@@ -442,6 +638,7 @@ class Dashboard extends Page implements HasForms
                 ->danger()
                 ->title('Processing Failed')
                 ->body('Failed to process the resume: ' . $e->getMessage())
+                ->persistent()
                 ->send();
         }
     }
@@ -485,6 +682,8 @@ class Dashboard extends Page implements HasForms
         return [
             Action::make('save')
                 ->label('Save Resume Data')
+                ->icon('heroicon-o-check-circle')
+                ->color('success')
                 ->action(function () {
                     $formData = $this->form->getState();
                     
@@ -499,7 +698,8 @@ class Dashboard extends Page implements HasForms
                         ->body('Resume data saved successfully.')
                         ->send();
                 })
-                ->visible($this->showForm),
+                ->visible($this->showForm)
+                ->requiresConfirmation(false),
         ];
     }
 }
