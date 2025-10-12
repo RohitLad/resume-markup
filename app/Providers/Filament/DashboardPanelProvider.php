@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Constants\AnnouncementPlacement;
+use App\Filament\Dashboard\Pages\Dashboard;
 use App\Filament\Dashboard\Pages\TwoFactorAuth\TwoFactorAuth;
 use App\Http\Middleware\UpdateUserLastSeenAt;
 use App\Livewire\AddressForm;
@@ -10,7 +11,6 @@ use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -54,13 +54,9 @@ class DashboardPanelProvider extends PanelProvider
             ])
             ->discoverResources(in: app_path('Filament/Dashboard/Resources'), for: 'App\\Filament\\Dashboard\\Resources')
             ->discoverPages(in: app_path('Filament/Dashboard/Pages'), for: 'App\\Filament\\Dashboard\\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
             ->viteTheme('resources/css/filament/dashboard/theme.css')
             ->discoverWidgets(in: app_path('Filament/Dashboard/Widgets'), for: 'App\\Filament\\Dashboard\\Widgets')
             ->widgets([
-                AccountWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
