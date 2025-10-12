@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('user_parameters', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate();
+            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete()->cascadeOnUpdate();
             $table->string('name');
             $table->string('value');
             $table->unique(['user_id', 'name']);

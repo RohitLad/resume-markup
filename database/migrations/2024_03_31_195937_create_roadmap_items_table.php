@@ -19,7 +19,7 @@ return new class extends Migration
             $table->string('status')->default(\App\Constants\RoadmapItemStatus::PENDING_APPROVAL->value);
             $table->string('type')->default(\App\Constants\RoadmapItemType::FEATURE->value);
             $table->integer('upvotes')->default(0);
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->timestamps();
         });
     }

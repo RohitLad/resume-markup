@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('orders', function (Blueprint $table) {
             $table->id();
             $table->uuid('uuid')->unique();
-            $table->foreignId('user_id')->nullable()->constrained();
+            $table->foreignUuid('user_id')->nullable()->constrained();
             $table->string('status');
             $table->foreignId('currency_id')->nullable()->constrained();
             $table->unsignedBigInteger('total_amount')->default(0);

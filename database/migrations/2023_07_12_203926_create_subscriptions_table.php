@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('subscriptions', function (Blueprint $table) {
             $table->id();
             $table->string('uuid');
-            $table->foreignId('user_id')->constrained();
+            $table->foreignUuid('user_id')->constrained();
             $table->foreignId('plan_id')->constrained();
             $table->unsignedInteger('price');
             $table->foreignId('currency_id')->constrained();

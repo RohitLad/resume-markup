@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('user_subscription_trials', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             $table->foreignId('subscription_id')->constrained()->onDelete('cascade');
             $table->unique(['user_id', 'subscription_id']);
             $table->dateTime('trial_ends_at');

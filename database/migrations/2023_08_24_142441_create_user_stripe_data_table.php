@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
             $table->string('stripe_customer_id')->nullable();
             $table->string('stripe_payment_method_id')->nullable();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignUuid('user_id')->constrained()->onDelete('cascade');
             // unique index on user_id, stripe_customer_id, stripe_payment_method_id
             $table->unique(['user_id', 'stripe_customer_id', 'stripe_payment_method_id'], 'user_stripe_data_unique');
         });

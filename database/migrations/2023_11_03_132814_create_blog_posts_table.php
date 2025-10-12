@@ -18,7 +18,7 @@ return new class extends Migration
             $table->longText('body');
             $table->boolean('is_published')->default(false);
             $table->timestamp('published_at')->nullable();
-            $table->foreignId('user_id')->constrained();
+            $table->foreignUuid('user_id')->constrained();
             $table->foreignId('author_id')->nullable()->constrained('users');
             $table->foreignId('blog_post_category_id')->nullable()->constrained();
 
