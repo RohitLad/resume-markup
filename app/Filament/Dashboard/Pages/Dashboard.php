@@ -1,8 +1,8 @@
 <?php
 namespace App\Filament\Dashboard\Pages;
 
+use App\Jobs\ParseResumeJob;
 use App\Models\Profile;
-use App\Services\OpenAIService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -36,7 +36,7 @@ class Dashboard extends Page implements HasForms
             $this->data = $profile->data;
             $this->showForm = true;
         } else {
-            $this->data = $this->getEmptyStructure();
+            $this->data = [];
             $this->showForm = false;
         }
         
@@ -611,70 +611,22 @@ class Dashboard extends Page implements HasForms
     protected function processResumeFile($file): void
     {
         try {
-            $openAIService = app(OpenAIService::class);
-            $parsedData = $openAIService->parseResumePdf($file->getRealPath());
-            
-            // Merge with empty structure to ensure all fields exist
-            $parsedData = array_merge($this->getEmptyStructure(), $parsedData);
-            
-            Profile::updateOrCreate(
-                ['user_id' => auth()->id()],
-                ['data' => $parsedData]
-            );
-            
-            $this->data = $parsedData;
-            $this->showForm = true;
-            $this->form->fill($this->data);
-            
+            // Dispatch the job for async processing
+            ParseResumeJob::dispatch(auth()->id(), $file->getRealPath());
+
             Notification::make()
-                ->success()
-                ->title('Resume Processed')
-                ->body('Your resume has been processed successfully. You can now edit the extracted data.')
-                ->duration(5000)
+                ->info()
+                ->title('Resume Processing Started')
+                ->body('Your resume is being processed. You will be notified when it\'s ready.')
                 ->send();
-                
+
         } catch (\Exception $e) {
             Notification::make()
                 ->danger()
                 ->title('Processing Failed')
-                ->body('Failed to process the resume: ' . $e->getMessage())
-                ->persistent()
+                ->body('Failed to start resume processing: ' . $e->getMessage())
                 ->send();
         }
-    }
-
-    protected function getEmptyStructure(): array
-    {
-        return [
-            'basics' => [
-                'name' => '',
-                'label' => '',
-                'image' => '',
-                'email' => '',
-                'phone' => '',
-                'url' => '',
-                'summary' => '',
-                'location' => [
-                    'address' => '',
-                    'postalCode' => '',
-                    'city' => '',
-                    'countryCode' => '',
-                    'region' => '',
-                ],
-                'profiles' => [],
-            ],
-            'work' => [],
-            'volunteer' => [],
-            'education' => [],
-            'awards' => [],
-            'certificates' => [],
-            'publications' => [],
-            'skills' => [],
-            'languages' => [],
-            'interests' => [],
-            'references' => [],
-            'projects' => [],
-        ];
     }
 
     protected function getActions(): array
