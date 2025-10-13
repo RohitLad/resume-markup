@@ -80,7 +80,7 @@ class AIService
     }
 
     /**
-     * Generate resume markdown from profile data
+     * Generate ATS-optimized resume markdown from profile data
      */
     public function generateResumeMarkdown(array $profileData, string $jobTitle, string $jobDescription): string
     {
@@ -91,12 +91,7 @@ class AIService
 
         $url = "https://generativelanguage.googleapis.com/v1beta/models/" . config('gemini.model') . ":generateContent?key={$apiKey}";
 
-        $prompt = "Generate a professional resume in Markdown format based on the following profile data. Tailor it for the job title: {$jobTitle}. Job description: {$jobDescription}
-
-Profile Data:
-" . json_encode($profileData, JSON_PRETTY_PRINT) . "
-
-Please create a well-formatted Markdown resume that highlights relevant experience and skills for this position. Include sections for contact information, summary, experience, education, and skills.";
+        $prompt = $this->buildResumeGenerationPrompt($profileData, $jobTitle, $jobDescription);
 
         $payload = [
             'contents' => [
@@ -109,12 +104,12 @@ Please create a well-formatted Markdown resume that highlights relevant experien
                 ]
             ],
             'generationConfig' => [
-                'temperature' => 0.7,
+                'temperature' => 0.3, // Lower temperature for more consistent, professional output
                 'maxOutputTokens' => 8192,
             ]
         ];
 
-        $response = Http::timeout(config('gemini.timeout', 30))
+        $response = Http::timeout(config('gemini.timeout', 60)) // Increased timeout for complex generation
             ->post($url, $payload);
 
         if (!$response->successful()) {
@@ -128,6 +123,90 @@ Please create a well-formatted Markdown resume that highlights relevant experien
         }
 
         return $data['candidates'][0]['content']['parts'][0]['text'];
+    }
+
+    /**
+     * Build comprehensive resume generation prompt
+     */
+    private function buildResumeGenerationPrompt(array $profileData, string $jobTitle, string $jobDescription): string
+    {
+        return "You are an expert resume writer and ATS (Applicant Tracking System) optimization specialist. Your task is to create a highly targeted, ATS-compatible resume in Markdown format that maximizes the candidate's chances of getting past automated screening systems and impressing human recruiters.
+
+## TARGET POSITION
+**Job Title:** {$jobTitle}
+**Job Description:** {$jobDescription}
+
+## CANDIDATE PROFILE DATA
+" . json_encode($profileData, JSON_PRETTY_PRINT) . "
+
+## CRITICAL REQUIREMENTS
+
+### 1. ATS COMPATIBILITY (HIGHEST PRIORITY)
+- Use standard section headers: Contact Information, Professional Summary, Work Experience, Education, Skills
+- Avoid tables, columns, graphics, or complex formatting
+- Use plain text only - no special characters or symbols
+- Include exact keywords from the job description naturally
+- Spell out acronyms on first use
+- Use standard date formats (MM/YYYY)
+
+### 2. KEYWORD OPTIMIZATION
+- Extract and incorporate key skills, technologies, and qualifications from the job description
+- Use industry-standard terminology
+- Include both technical and soft skills mentioned in the job posting
+- Prioritize keywords that appear in the job description
+
+### 3. EXPERIENCE TAILORING
+- Reorder work experience to prioritize roles most relevant to the target position
+- Customize job descriptions to highlight achievements matching job requirements
+- Quantify accomplishments with metrics (%, numbers, dollar amounts) where possible
+- Use action verbs that match the job's required responsibilities
+- Focus on transferable skills and relevant experience
+
+### 4. SKILLS PRIORITIZATION
+- Group skills by category (Technical, Soft Skills, Tools, etc.)
+- Prioritize skills mentioned in the job description
+- Include proficiency levels where available
+- Remove irrelevant skills to keep resume focused
+
+### 5. PROFESSIONAL FORMATTING
+- Use clear, scannable structure
+- Keep descriptions concise but impactful (2-4 lines per role)
+- Use consistent formatting throughout
+- Ensure contact information is complete and professional
+
+## OUTPUT FORMAT
+Return ONLY the resume in Markdown format. No explanations, no additional text.
+
+Example structure:
+# [Full Name]
+[Phone] | [Email] | [Location] | [LinkedIn/Portfolio]
+
+## Professional Summary
+[2-3 sentence summary tailored to the job]
+
+## Work Experience
+### [Job Title], [Company Name] - [City, State]
+[MM/YYYY] - [MM/YYYY]
+- [Achievement with metrics]
+- [Relevant responsibility]
+- [Technical skill demonstration]
+
+## Education
+### [Degree], [Field of Study]
+[School Name] - [City, State]
+[MM/YYYY]
+
+## Skills
+- **Technical:** [skill1], [skill2], [skill3]
+- **Tools & Software:** [tool1], [tool2]
+- **Soft Skills:** [skill1], [skill2]
+
+## OUTPUT INSTRUCTIONS
+- Generate a complete, professional resume
+- Ensure all sections are populated with relevant information
+- Make the content compelling and achievement-oriented
+- Optimize for both ATS parsing and human readability
+- Keep total length to 1 page worth of content (approximately 600-800 words)";
     }
 
     public function getParsePDFPrompt(){
