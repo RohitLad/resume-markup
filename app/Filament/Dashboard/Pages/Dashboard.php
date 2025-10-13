@@ -52,13 +52,7 @@ class Dashboard extends Page implements HasForms
                     ->directory('resumes')
                     ->acceptedFileTypes(['application/pdf'])
                     ->maxSize(10240)
-                    ->afterStateUpdated(function ($state) {
-                        if ($state) {
-                            $this->processResumeFile($state);
-                        }
-                    })
-                    ->live()
-                    ->helperText('Upload your resume and we\'ll automatically extract the information')
+                    ->helperText('Upload your resume and click Save to extract the information')
                     ->columnSpanFull(),
 
                 Tabs::make('Resume Sections')
@@ -611,8 +605,14 @@ class Dashboard extends Page implements HasForms
     protected function processResumeFile($file): void
     {
         try {
-            // Get the full path to the uploaded file
+            // In Filament FileUpload, afterStateUpdated receives the stored file path
+            // The file is stored in storage/app/public/resumes/ directory
             $filePath = storage_path('app/public/' . $file);
+
+            // Verify file exists before dispatching
+            if (!file_exists($filePath)) {
+                throw new \Exception('Uploaded file not found at: ' . $filePath);
+            }
 
             // Dispatch the job for async processing
             ParseResumeJob::dispatch(auth()->id(), $filePath);
@@ -641,12 +641,29 @@ class Dashboard extends Page implements HasForms
                 ->color('success')
                 ->action(function () {
                     $formData = $this->form->getState();
-                    
+
+                    // Process resume file if uploaded
+                    if (isset($formData['resume']) && $formData['resume']) {
+                        try {
+                            $this->processResumeFile($formData['resume']);
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->danger()
+                                ->title('Resume Processing Failed')
+                                ->body('Failed to process resume: ' . $e->getMessage())
+                                ->send();
+                            return;
+                        }
+                    }
+
+                    // Remove resume from form data before saving (it's not part of profile data)
+                    unset($formData['resume']);
+
                     Profile::updateOrCreate(
                         ['user_id' => auth()->id()],
                         ['data' => $formData]
                     );
-                    
+
                     Notification::make()
                         ->success()
                         ->title('Saved')
