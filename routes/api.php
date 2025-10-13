@@ -28,7 +28,7 @@ Route::post('/payments-providers/lemon-squeezy/webhook', [
     'handleWebhook',
 ])->name('payments-providers.lemon-squeezy.webhook');
 
-Route::match(['GET', 'POST', 'PUT', 'PATCH'], '/n8n/webhook', [
+Route::post('/n8n/webhook', [
     App\Http\Controllers\N8nWebhookController::class,
     'handle',
 ])->name('n8n.webhook');
