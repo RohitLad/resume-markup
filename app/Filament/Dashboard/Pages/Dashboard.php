@@ -17,6 +17,8 @@ use Filament\Pages\Page;
 use BackedEnum;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
+use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
+use Storage;
 
 class Dashboard extends Page implements HasForms
 {
@@ -31,7 +33,7 @@ class Dashboard extends Page implements HasForms
     public function mount(): void
     {
         $profile = Profile::where('user_id', auth()->id())->first();
-        
+
         if ($profile && !empty($profile->data)) {
             $this->data = $profile->data;
             $this->showForm = true;
@@ -39,7 +41,7 @@ class Dashboard extends Page implements HasForms
             $this->data = [];
             $this->showForm = false;
         }
-        
+
         $this->form->fill($this->data);
     }
 
@@ -50,9 +52,48 @@ class Dashboard extends Page implements HasForms
                 FileUpload::make('resume')
                     ->label('Upload Resume (PDF)')
                     ->directory('resumes')
+                    ->disk('public')
                     ->acceptedFileTypes(['application/pdf'])
                     ->maxSize(10240)
-                    ->helperText('Upload your resume and click Save to extract the information')
+                    ->afterStateUpdated(function ($state) {
+                        if (!$state) {
+                            return;
+                        }
+
+                        try {
+                            // Get the temporary uploaded file
+                            $temporaryUpload = is_array($state) ? $state[0] : $state;
+
+                            if ($temporaryUpload instanceof TemporaryUploadedFile) {
+                                $tempPath = $temporaryUpload->getRealPath();
+
+                                // Store the file permanently
+                                $fileName = time() . '_' . $temporaryUpload->getClientOriginalName();
+                                $storedPath = Storage::disk('public')->putFileAs('resumes', $temporaryUpload, $fileName);
+
+                                // Dispatch the job with the stored path
+                                ParseResumeJob::dispatch(auth()->id(), $storedPath);
+
+                                Notification::make()
+                                    ->success()
+                                    ->title('Resume Uploaded')
+                                    ->body('Your resume is being processed.')
+                                    ->send();
+                            }
+                        } catch (\Exception $e) {
+                            \Log::error('Resume upload failed', [
+                                'error' => $e->getMessage(),
+                                'user_id' => auth()->id(),
+                            ]);
+
+                            Notification::make()
+                                ->danger()
+                                ->title('Upload Failed')
+                                ->body('Failed to upload resume.')
+                                ->send();
+                        }
+                    })
+                    ->helperText('Upload your resume PDF and it will be automatically parsed to populate the form')
                     ->columnSpanFull(),
 
                 Tabs::make('Resume Sections')
@@ -68,67 +109,67 @@ class Dashboard extends Page implements HasForms
                                             ->required()
                                             ->placeholder('John Doe')
                                             ->prefixIcon('heroicon-o-user'),
-                                        
+
                                         TextInput::make('basics.label')
                                             ->label('Professional Title')
                                             ->placeholder('Senior Software Engineer')
                                             ->prefixIcon('heroicon-o-briefcase'),
-                                        
+
                                         TextInput::make('basics.email')
                                             ->label('Email')
                                             ->email()
                                             ->placeholder('john@example.com')
                                             ->prefixIcon('heroicon-o-envelope'),
-                                        
+
                                         TextInput::make('basics.phone')
                                             ->label('Phone')
                                             ->tel()
                                             ->placeholder('+1 (555) 123-4567')
                                             ->prefixIcon('heroicon-o-phone'),
-                                        
+
                                         TextInput::make('basics.url')
                                             ->label('Website')
                                             ->url()
                                             ->placeholder('https://johndoe.com')
                                             ->prefixIcon('heroicon-o-globe-alt'),
-                                        
+
                                         TextInput::make('basics.image')
                                             ->label('Profile Image URL')
                                             ->url()
                                             ->placeholder('https://example.com/photo.jpg')
                                             ->prefixIcon('heroicon-o-photo'),
                                     ]),
-                                
+
                                 Textarea::make('basics.summary')
                                     ->label('Professional Summary')
                                     ->rows(4)
                                     ->placeholder('Write a brief summary about yourself and your professional experience...')
                                     ->columnSpanFull(),
-                                
+
                                 Grid::make(2)
                                     ->schema([
                                         TextInput::make('basics.location.address')
                                             ->label('Address')
                                             ->placeholder('123 Main Street'),
-                                        
+
                                         TextInput::make('basics.location.city')
                                             ->label('City')
                                             ->placeholder('New York'),
-                                        
+
                                         TextInput::make('basics.location.region')
                                             ->label('State/Region')
                                             ->placeholder('NY'),
-                                        
+
                                         TextInput::make('basics.location.postalCode')
                                             ->label('Postal Code')
                                             ->placeholder('10001'),
-                                        
+
                                         TextInput::make('basics.location.countryCode')
                                             ->label('Country Code')
                                             ->maxLength(2)
                                             ->placeholder('US'),
                                     ]),
-                                
+
                                 Repeater::make('basics.profiles')
                                     ->label('Social Profiles')
                                     ->schema([
@@ -136,11 +177,11 @@ class Dashboard extends Page implements HasForms
                                             ->label('Network')
                                             ->placeholder('LinkedIn, Twitter, GitHub, etc.')
                                             ->required(),
-                                        
+
                                         TextInput::make('username')
                                             ->label('Username')
                                             ->placeholder('johndoe'),
-                                        
+
                                         TextInput::make('url')
                                             ->label('Profile URL')
                                             ->url()
@@ -150,13 +191,13 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Social Profile')
                                     ->columnSpanFull()
-                                    ->itemLabel(fn (array $state): ?string => $state['network'] ?? 'Social Profile'),
+                                    ->itemLabel(fn(array $state): ?string => $state['network'] ?? 'Social Profile'),
                             ]),
 
                         // Work Experience Tab
                         Tabs\Tab::make('Experience')
                             ->icon('heroicon-o-briefcase')
-                            ->badge(fn () => count($this->data['work'] ?? []))
+                            ->badge(fn() => count($this->data['work'] ?? []))
                             ->schema([
                                 Repeater::make('work')
                                     ->label('Work Experience')
@@ -167,36 +208,36 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Company Name')
                                                     ->required()
                                                     ->placeholder('Acme Corporation'),
-                                                
+
                                                 TextInput::make('position')
                                                     ->label('Position')
                                                     ->required()
                                                     ->placeholder('Senior Software Engineer'),
-                                                
+
                                                 TextInput::make('url')
                                                     ->label('Company Website')
                                                     ->url()
                                                     ->placeholder('https://acme.com'),
-                                                
+
                                                 Grid::make(2)
                                                     ->schema([
                                                         DatePicker::make('startDate')
                                                             ->label('Start Date')
                                                             ->native(false),
-                                                        
+
                                                         DatePicker::make('endDate')
                                                             ->label('End Date')
                                                             ->native(false)
                                                             ->placeholder('Present'),
                                                     ]),
                                             ]),
-                                        
+
                                         Textarea::make('summary')
                                             ->label('Description')
                                             ->rows(3)
                                             ->placeholder('Describe your role and responsibilities...')
                                             ->columnSpanFull(),
-                                        
+
                                         TagsInput::make('highlights')
                                             ->label('Key Achievements')
                                             ->placeholder('Add achievement and press Enter')
@@ -206,7 +247,8 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Work Experience')
                                     ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => 
+                                    ->itemLabel(
+                                        fn(array $state): ?string =>
                                         ($state['position'] ?? 'Position') . ' at ' . ($state['name'] ?? 'Company')
                                     )
                                     ->columnSpanFull()
@@ -216,7 +258,7 @@ class Dashboard extends Page implements HasForms
                         // Education Tab
                         Tabs\Tab::make('Education')
                             ->icon('heroicon-o-academic-cap')
-                            ->badge(fn () => count($this->data['education'] ?? []))
+                            ->badge(fn() => count($this->data['education'] ?? []))
                             ->schema([
                                 Repeater::make('education')
                                     ->schema([
@@ -226,33 +268,33 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Institution')
                                                     ->required()
                                                     ->placeholder('University of Example'),
-                                                
+
                                                 TextInput::make('url')
                                                     ->label('Institution Website')
                                                     ->url()
                                                     ->placeholder('https://university.edu'),
-                                                
+
                                                 TextInput::make('area')
                                                     ->label('Field of Study')
                                                     ->placeholder('Computer Science'),
-                                                
+
                                                 TextInput::make('studyType')
                                                     ->label('Degree Type')
                                                     ->placeholder('Bachelor of Science'),
-                                                
+
                                                 DatePicker::make('startDate')
                                                     ->label('Start Date')
                                                     ->native(false),
-                                                
+
                                                 DatePicker::make('endDate')
                                                     ->label('End Date')
                                                     ->native(false),
-                                                
+
                                                 TextInput::make('score')
                                                     ->label('GPA/Score')
                                                     ->placeholder('3.8/4.0'),
                                             ]),
-                                        
+
                                         TagsInput::make('courses')
                                             ->label('Relevant Courses')
                                             ->placeholder('Add course and press Enter')
@@ -261,7 +303,8 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Education')
                                     ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => 
+                                    ->itemLabel(
+                                        fn(array $state): ?string =>
                                         ($state['studyType'] ?? 'Degree') . ' - ' . ($state['institution'] ?? 'Institution')
                                     )
                                     ->columnSpanFull()
@@ -271,7 +314,7 @@ class Dashboard extends Page implements HasForms
                         // Skills Tab
                         Tabs\Tab::make('Skills')
                             ->icon('heroicon-o-sparkles')
-                            ->badge(fn () => count($this->data['skills'] ?? []))
+                            ->badge(fn() => count($this->data['skills'] ?? []))
                             ->schema([
                                 Repeater::make('skills')
                                     ->schema([
@@ -281,7 +324,7 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Skill Category')
                                                     ->required()
                                                     ->placeholder('Programming Languages'),
-                                                
+
                                                 TextInput::make('level')
                                                     ->label('Proficiency Level')
                                                     ->placeholder('Advanced')
@@ -293,7 +336,7 @@ class Dashboard extends Page implements HasForms
                                                         'Master',
                                                     ]),
                                             ]),
-                                        
+
                                         TagsInput::make('keywords')
                                             ->label('Skills')
                                             ->placeholder('Add skill and press Enter')
@@ -303,8 +346,9 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Skill Category')
                                     ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => 
-                                        ($state['name'] ?? 'Skill Category') . 
+                                    ->itemLabel(
+                                        fn(array $state): ?string =>
+                                        ($state['name'] ?? 'Skill Category') .
                                         ($state['level'] ? ' (' . $state['level'] . ')' : '')
                                     )
                                     ->columnSpanFull()
@@ -314,7 +358,7 @@ class Dashboard extends Page implements HasForms
                         // Projects Tab
                         Tabs\Tab::make('Projects')
                             ->icon('heroicon-o-rocket-launch')
-                            ->badge(fn () => count($this->data['projects'] ?? []))
+                            ->badge(fn() => count($this->data['projects'] ?? []))
                             ->schema([
                                 Repeater::make('projects')
                                     ->schema([
@@ -324,28 +368,28 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Project Name')
                                                     ->required()
                                                     ->placeholder('Awesome Project'),
-                                                
+
                                                 TextInput::make('url')
                                                     ->label('Project URL')
                                                     ->url()
                                                     ->placeholder('https://github.com/user/project'),
-                                                
+
                                                 DatePicker::make('startDate')
                                                     ->label('Start Date')
                                                     ->native(false),
-                                                
+
                                                 DatePicker::make('endDate')
                                                     ->label('End Date')
                                                     ->native(false)
                                                     ->placeholder('Ongoing'),
                                             ]),
-                                        
+
                                         Textarea::make('description')
                                             ->label('Description')
                                             ->rows(3)
                                             ->placeholder('Describe the project, your role, and technologies used...')
                                             ->columnSpanFull(),
-                                        
+
                                         TagsInput::make('highlights')
                                             ->label('Key Highlights')
                                             ->placeholder('Add highlight and press Enter')
@@ -354,7 +398,7 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Project')
                                     ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Project')
+                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Project')
                                     ->columnSpanFull()
                                     ->reorderable(),
                             ]),
@@ -362,7 +406,7 @@ class Dashboard extends Page implements HasForms
                         // Certificates & Awards Tab
                         Tabs\Tab::make('Certificates & Awards')
                             ->icon('heroicon-o-trophy')
-                            ->badge(fn () => count($this->data['certificates'] ?? []) + count($this->data['awards'] ?? []))
+                            ->badge(fn() => count($this->data['certificates'] ?? []) + count($this->data['awards'] ?? []))
                             ->schema([
                                 Repeater::make('certificates')
                                     ->label('Certificates')
@@ -373,15 +417,15 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Certificate Name')
                                                     ->required()
                                                     ->placeholder('AWS Certified Solutions Architect'),
-                                                
+
                                                 TextInput::make('issuer')
                                                     ->label('Issuing Organization')
                                                     ->placeholder('Amazon Web Services'),
-                                                
+
                                                 DatePicker::make('date')
                                                     ->label('Issue Date')
                                                     ->native(false),
-                                                
+
                                                 TextInput::make('url')
                                                     ->label('Certificate URL')
                                                     ->url()
@@ -392,10 +436,10 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Certificate')
                                     ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Certificate')
+                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Certificate')
                                     ->columnSpanFull()
                                     ->reorderable(),
-                                
+
                                 Repeater::make('awards')
                                     ->label('Awards')
                                     ->schema([
@@ -405,16 +449,16 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Award Title')
                                                     ->required()
                                                     ->placeholder('Employee of the Year'),
-                                                
+
                                                 TextInput::make('awarder')
                                                     ->label('Awarded By')
                                                     ->placeholder('Acme Corporation'),
-                                                
+
                                                 DatePicker::make('date')
                                                     ->label('Date')
                                                     ->native(false),
                                             ]),
-                                        
+
                                         Textarea::make('summary')
                                             ->label('Description')
                                             ->rows(2)
@@ -424,7 +468,7 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Award')
                                     ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => $state['title'] ?? 'Award')
+                                    ->itemLabel(fn(array $state): ?string => $state['title'] ?? 'Award')
                                     ->columnSpanFull()
                                     ->reorderable(),
                             ]),
@@ -442,7 +486,7 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Language')
                                                     ->required()
                                                     ->placeholder('English'),
-                                                
+
                                                 TextInput::make('fluency')
                                                     ->label('Fluency Level')
                                                     ->placeholder('Native')
@@ -457,13 +501,14 @@ class Dashboard extends Page implements HasForms
                                     ])
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Language')
-                                    ->itemLabel(fn (array $state): ?string => 
-                                        ($state['language'] ?? 'Language') . 
+                                    ->itemLabel(
+                                        fn(array $state): ?string =>
+                                        ($state['language'] ?? 'Language') .
                                         ($state['fluency'] ? ' - ' . $state['fluency'] : '')
                                     )
                                     ->columnSpanFull()
                                     ->reorderable(),
-                                
+
                                 Repeater::make('volunteer')
                                     ->label('Volunteer Experience')
                                     ->schema([
@@ -473,34 +518,34 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Organization')
                                                     ->required()
                                                     ->placeholder('Red Cross'),
-                                                
+
                                                 TextInput::make('position')
                                                     ->label('Role')
                                                     ->placeholder('Volunteer Coordinator'),
-                                                
+
                                                 TextInput::make('url')
                                                     ->label('Organization Website')
                                                     ->url()
                                                     ->placeholder('https://organization.org'),
-                                                
+
                                                 Grid::make(2)
                                                     ->schema([
                                                         DatePicker::make('startDate')
                                                             ->label('Start Date')
                                                             ->native(false),
-                                                        
+
                                                         DatePicker::make('endDate')
                                                             ->label('End Date')
                                                             ->native(false),
                                                     ]),
                                             ]),
-                                        
+
                                         Textarea::make('summary')
                                             ->label('Description')
                                             ->rows(2)
                                             ->placeholder('Describe your volunteer work...')
                                             ->columnSpanFull(),
-                                        
+
                                         TagsInput::make('highlights')
                                             ->label('Key Contributions')
                                             ->placeholder('Add contribution and press Enter')
@@ -509,12 +554,13 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Volunteer Experience')
                                     ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => 
+                                    ->itemLabel(
+                                        fn(array $state): ?string =>
                                         ($state['position'] ?? 'Role') . ' at ' . ($state['organization'] ?? 'Organization')
                                     )
                                     ->columnSpanFull()
                                     ->reorderable(),
-                                
+
                                 Repeater::make('publications')
                                     ->label('Publications')
                                     ->schema([
@@ -524,21 +570,21 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Publication Title')
                                                     ->required()
                                                     ->placeholder('My Research Paper'),
-                                                
+
                                                 TextInput::make('publisher')
                                                     ->label('Publisher')
                                                     ->placeholder('IEEE'),
-                                                
+
                                                 DatePicker::make('releaseDate')
                                                     ->label('Release Date')
                                                     ->native(false),
-                                                
+
                                                 TextInput::make('url')
                                                     ->label('Publication URL')
                                                     ->url()
                                                     ->placeholder('https://doi.org/...'),
                                             ]),
-                                        
+
                                         Textarea::make('summary')
                                             ->label('Summary')
                                             ->rows(2)
@@ -548,10 +594,10 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Publication')
                                     ->collapsible()
-                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Publication')
+                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Publication')
                                     ->columnSpanFull()
                                     ->reorderable(),
-                                
+
                                 Repeater::make('interests')
                                     ->label('Interests')
                                     ->schema([
@@ -561,7 +607,7 @@ class Dashboard extends Page implements HasForms
                                                     ->label('Interest')
                                                     ->required()
                                                     ->placeholder('Artificial Intelligence'),
-                                                
+
                                                 TagsInput::make('keywords')
                                                     ->label('Keywords')
                                                     ->placeholder('Add keyword and press Enter'),
@@ -569,10 +615,10 @@ class Dashboard extends Page implements HasForms
                                     ])
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Interest')
-                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Interest')
+                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Interest')
                                     ->columnSpanFull()
                                     ->reorderable(),
-                                
+
                                 Repeater::make('references')
                                     ->label('References')
                                     ->schema([
@@ -580,7 +626,7 @@ class Dashboard extends Page implements HasForms
                                             ->label('Reference Name')
                                             ->required()
                                             ->placeholder('Jane Smith'),
-                                        
+
                                         Textarea::make('reference')
                                             ->label('Reference Text')
                                             ->rows(2)
@@ -589,7 +635,7 @@ class Dashboard extends Page implements HasForms
                                     ])
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Reference')
-                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Reference')
+                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Reference')
                                     ->columnSpanFull()
                                     ->reorderable(),
                             ]),
@@ -641,20 +687,6 @@ class Dashboard extends Page implements HasForms
                 ->color('success')
                 ->action(function () {
                     $formData = $this->form->getState();
-
-                    // Process resume file if uploaded
-                    if (isset($formData['resume']) && $formData['resume']) {
-                        try {
-                            $this->processResumeFile($formData['resume']);
-                        } catch (\Exception $e) {
-                            Notification::make()
-                                ->danger()
-                                ->title('Resume Processing Failed')
-                                ->body('Failed to process resume: ' . $e->getMessage())
-                                ->send();
-                            return;
-                        }
-                    }
 
                     // Remove resume from form data before saving (it's not part of profile data)
                     unset($formData['resume']);

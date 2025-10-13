@@ -7,6 +7,7 @@ use App\Services\AIService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
+use Log;
 
 class ParseResumeJob implements ShouldQueue
 {
@@ -28,34 +29,43 @@ class ParseResumeJob implements ShouldQueue
      * Execute the job.
      */
     public function handle(): void
-    {
-        // Copy the file to a temp location if needed
-        $tempPath = storage_path('app/temp/' . uniqid() . '.pdf');
-        if (!file_exists(dirname($tempPath))) {
-            mkdir(dirname($tempPath), 0755, true);
+{
+    try {
+        // Get the full path - filePath is already relative like 'resumes/filename.pdf'
+        $fullPath = Storage::disk('public')->path($this->filePath);
+
+        if (!file_exists($fullPath)) {
+            Log::error('Resume file not found', [
+                'user_id' => $this->userId,
+                'file_path' => $this->filePath,
+                'full_path' => $fullPath
+            ]);
+            throw new \Exception('Resume file not found');
         }
-        copy($this->filePath, $tempPath);
 
-        try {
-            $aiService = app(AIService::class);
-            $parsedData = $aiService->parseResumePdf($tempPath);
+        $aiService = app(AIService::class);
+        $parsedData = $aiService->parseResumePdf($fullPath);
 
-            // Merge with empty structure to ensure all fields exist
-            $parsedData = array_merge($this->getEmptyStructure(), $parsedData);
+        // Merge with empty structure to ensure all fields exist
+        $parsedData = array_merge($this->getEmptyStructure(), $parsedData);
 
-            Profile::updateOrCreate(
-                ['user_id' => $this->userId],
-                ['data' => $parsedData]
-            );
+        Profile::updateOrCreate(
+            ['user_id' => $this->userId],
+            ['data' => $parsedData]
+        );
 
-            // Clean up temp file
-            unlink($tempPath);
-        } catch (\Exception $e) {
-            // Log error or handle
-            unlink($tempPath);
-            throw $e;
-        }
+        // Optionally delete the file after processing
+        // Storage::disk('public')->delete($this->filePath);
+
+    } catch (\Exception $e) {
+        Log::error('Resume parsing failed', [
+            'user_id' => $this->userId,
+            'error' => $e->getMessage(),
+        ]);
+        
+        throw $e;
     }
+}
 
     protected function getEmptyStructure(): array
     {
