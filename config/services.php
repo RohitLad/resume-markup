@@ -109,7 +109,8 @@ return [
         'url' => env('N8N_URL'),
         'api_key' => env('N8N_API_KEY'),
         'endpoints' => [
-            'generate_resume' => '',
+            'generate_resume' => 'generate-resume',
+            'parse_resume' => 'parse-resume',
         ],
     ],
 
