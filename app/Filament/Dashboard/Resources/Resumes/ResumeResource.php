@@ -9,7 +9,7 @@ use App\Filament\Dashboard\Resources\Resumes\Pages\ViewResume;
 use App\Filament\Dashboard\Resources\Resumes\Schemas\ResumeForm;
 use App\Filament\Dashboard\Resources\Resumes\Schemas\ResumeInfolist;
 use App\Filament\Dashboard\Resources\Resumes\Tables\ResumesTable;
-use App\Jobs\GenerateResumeJob;
+
 use App\Models\Resume;
 use BackedEnum;
 use Filament\Actions\Action;

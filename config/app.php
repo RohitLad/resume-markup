@@ -58,6 +58,18 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Application Tunnel URL
+    |--------------------------------------------------------------------------
+    |
+    | This value is used for webhook URLs in development when using tunneling
+    | services like ngrok. In production, the main APP_URL is used.
+    |
+    */
+
+    'tunnel_url' => env('TUNNEL_URL'),
+
     'asset_url' => env('ASSET_URL'),
 
     /*

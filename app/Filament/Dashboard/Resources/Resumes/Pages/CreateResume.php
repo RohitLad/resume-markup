@@ -3,7 +3,7 @@
 namespace App\Filament\Dashboard\Resources\Resumes\Pages;
 
 use App\Filament\Dashboard\Resources\Resumes\ResumeResource;
-use App\Jobs\GenerateResumeJob;
+use App\Services\ResumeProcessingService;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\CreateRecord;
 
@@ -20,8 +20,9 @@ class CreateResume extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // Dispatch the job to generate the resume content
-        GenerateResumeJob::dispatch($this->record);
+        // Initiate resume generation
+        $processingService = app(ResumeProcessingService::class);
+        $processingService->initiateResumeGeneration($this->record);
 
         // Show success notification
         Notification::make()

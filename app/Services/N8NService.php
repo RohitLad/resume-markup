@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Log;
 
 class N8NService
 {
-    private const DEFAULT_TIMEOUT = 120;
+    private const DEFAULT_TIMEOUT = 10;
     private const CONNECTION_TEST_TIMEOUT = 10;
 
     private Client $client;
@@ -22,16 +22,19 @@ class N8NService
     }
 
     /**
-     * Generate resume markdown using n8n workflow
+     * Generate resume markdown using n8n workflow (async with webhook)
      */
-    public function generateResumeMarkdown(array $profileData, string $jobTitle, string $jobDescription): string
+    public function generateResumeMarkdown(array $profileData, string $jobTitle, string $jobDescription, string $webhookUrl, array $metadata = []): string
     {
         $fullUrl = $this->buildUrl('generate_resume', 'generate-resume');
+        $requestId = (string) \Illuminate\Support\Str::uuid();
         $startTime = microtime(true);
 
-        Log::info('Sending request to n8n', [
+        Log::info('Sending async request to n8n for resume generation', [
             'url' => $fullUrl,
+            'request_id' => $requestId,
             'job_title' => $jobTitle,
+            'webhook_url' => $webhookUrl,
             'profile_keys' => array_keys($profileData),
         ]);
 
@@ -41,6 +44,11 @@ class N8NService
                     'job_title' => $jobTitle,
                     'job_description' => $jobDescription,
                     'profile' => $profileData,
+                    'webhook_url' => $webhookUrl,
+                    'metadata' => array_merge($metadata, [
+                        'type' => 'generate_resume',
+                        'request_id' => $requestId,
+                    ]),
                 ],
                 'headers' => $this->getHeaders(),
             ]);
@@ -50,57 +58,50 @@ class N8NService
 
             if ($statusCode < 200 || $statusCode >= 300) {
                 $body = $response->getBody()->getContents();
-                Log::error('n8n request failed', [
+                Log::error('n8n async request failed', [
                     'status' => $statusCode,
                     'body' => $body,
                     'url' => $fullUrl,
+                    'request_id' => $requestId,
                 ]);
                 throw new \Exception("n8n workflow failed with status {$statusCode}: {$body}");
             }
 
-            $data = json_decode($response->getBody()->getContents(), true);
-            
-            if (json_last_error() !== JSON_ERROR_NONE) {
-                throw new \Exception('Invalid JSON response: ' . json_last_error_msg());
-            }
-
-            $content = $this->extractContent($data, ['resume', 'content', 'markdown']);
-
-            if (empty($content)) {
-                throw new \Exception('Empty resume content received from n8n workflow');
-            }
-
-            Log::info('Successfully received resume from n8n', [
-                'content_length' => strlen($content),
+            Log::info('Successfully initiated resume generation request', [
+                'request_id' => $requestId,
                 'response_time_seconds' => round($responseTime, 2),
             ]);
 
-            return $content;
+            return $requestId;
 
         } catch (GuzzleException $e) {
-            $this->logError('n8n resume generation failed', $e, $fullUrl, microtime(true) - $startTime, [
+            $this->logError('n8n resume generation request failed', $e, $fullUrl, microtime(true) - $startTime, [
+                'request_id' => $requestId,
                 'job_title' => $jobTitle,
             ]);
-            throw new \Exception('Failed to generate resume: ' . $e->getMessage(), 0, $e);
+            throw new \Exception('Failed to initiate resume generation: ' . $e->getMessage(), 0, $e);
         }
     }
 
     /**
-     * Parse resume PDF using n8n workflow
+     * Parse resume PDF using n8n workflow (async with webhook)
      */
-    public function parseResumePdf(string $filePath): array
+    public function parseResumePdf(string $filePath, string $webhookUrl, array $metadata = []): string
     {
         $this->validateFile($filePath);
 
         $fullUrl = $this->buildUrl('parse_resume', 'parse-resume');
         $fileContent = file_get_contents($filePath);
         $fileSize = strlen($fileContent);
+        $requestId = (string) \Illuminate\Support\Str::uuid();
 
-        Log::info('Sending PDF to n8n for parsing', [
+        Log::info('Sending PDF to n8n for async parsing', [
             'url' => $fullUrl,
+            'request_id' => $requestId,
             'file_size' => $fileSize,
             'file_size_mb' => round($fileSize / 1024 / 1024, 2),
-            'filename' => basename($filePath)
+            'filename' => basename($filePath),
+            'webhook_url' => $webhookUrl
         ]);
 
         try {
@@ -111,49 +112,43 @@ class N8NService
             $response = $this->client->request('POST', $fullUrl, [
                 'body' => $fileContent,
                 'headers' => $headers,
+                'query' => [
+                    'webhook_url' => $webhookUrl,
+                    'request_id' => $requestId,
+                    'metadata' => array_merge($metadata, [
+                        'type' => 'parse_resume',
+                        'request_id' => $requestId,
+                    ]),
+                ],
             ]);
 
             $statusCode = $response->getStatusCode();
 
             if ($statusCode < 200 || $statusCode >= 300) {
                 $body = $response->getBody()->getContents();
-                Log::error('n8n PDF parsing failed', [
+                Log::error('n8n async PDF parsing request failed', [
                     'status' => $statusCode,
                     'body' => $body,
-                    'url' => $fullUrl
+                    'url' => $fullUrl,
+                    'request_id' => $requestId
                 ]);
                 throw new \Exception("n8n workflow failed with status {$statusCode}: {$body}");
             }
 
-            $rawBody = $response->getBody()->getContents();
-            
-            Log::info('n8n response received', [
+            Log::info('Successfully initiated PDF parsing request', [
+                'request_id' => $requestId,
                 'status' => $statusCode,
-                'body_length' => strlen($rawBody),
-                'body_preview' => substr($rawBody, 0, 200),
-                'content_type' => $response->getHeaderLine('Content-Type')
             ]);
 
-            if (empty($rawBody)) {
-                throw new \Exception('Empty response from n8n workflow');
-            }
-
-            $data = $this->parseJsonResponse($rawBody);
-            $parsedData = $this->extractParsedData($data);
-
-            Log::info('Successfully parsed resume from n8n', [
-                'fields_parsed' => count($parsedData),
-                'fields' => array_keys($parsedData)
-            ]);
-
-            return $parsedData;
+            return $requestId;
 
         } catch (GuzzleException $e) {
-            $this->logError('n8n PDF parsing failed', $e, $fullUrl, 0, [
+            $this->logError('n8n PDF parsing request failed', $e, $fullUrl, 0, [
+                'request_id' => $requestId,
                 'file_path' => $filePath,
                 'file_size' => $fileSize
             ]);
-            throw new \Exception('Failed to parse resume PDF: ' . $e->getMessage(), 0, $e);
+            throw new \Exception('Failed to initiate resume PDF parsing: ' . $e->getMessage(), 0, $e);
         }
     }
 
@@ -290,6 +285,25 @@ class N8NService
         if (!is_readable($filePath)) {
             throw new \Exception('Resume file is not readable: ' . $filePath);
         }
+    }
+
+    /**
+     * Get the webhook URL for n8n callbacks
+     */
+    public function getWebhookUrl(): string
+    {
+        // Use configured webhook URL if available
+        $configuredUrl = config('services.n8n.webhook_url');
+        if ($configuredUrl) {
+            return $configuredUrl;
+        }
+
+        // Otherwise generate based on environment
+        $baseUrl = config('app.env') === 'production'
+            ? config('app.url')
+            : config('app.tunnel_url', config('app.url'));
+
+        return rtrim($baseUrl, '/') . '/api/n8n/webhook';
     }
 
     /**

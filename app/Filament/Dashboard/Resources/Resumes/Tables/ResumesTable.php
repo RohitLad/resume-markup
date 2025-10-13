@@ -2,7 +2,7 @@
 
 namespace App\Filament\Dashboard\Resources\Resumes\Tables;
 
-use App\Jobs\GenerateResumeJob;
+use App\Services\ResumeProcessingService;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -58,7 +58,8 @@ class ResumesTable
                     ->modalDescription('This will regenerate the resume content using the latest job details and profile information. The existing content will be replaced.')
                     ->modalSubmitActionLabel('Regenerate')
                     ->action(function ($record) {
-                        GenerateResumeJob::dispatch($record);
+                        $processingService = app(ResumeProcessingService::class);
+                        $processingService->initiateResumeGeneration($record);
 
                         Notification::make()
                             ->success()

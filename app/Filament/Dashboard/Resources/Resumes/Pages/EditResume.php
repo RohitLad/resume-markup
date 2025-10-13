@@ -3,7 +3,7 @@
 namespace App\Filament\Dashboard\Resources\Resumes\Pages;
 
 use App\Filament\Dashboard\Resources\Resumes\ResumeResource;
-use App\Jobs\GenerateResumeJob;
+use App\Services\ResumeProcessingService;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Notifications\Notification;
@@ -24,7 +24,8 @@ class EditResume extends EditRecord
     protected function afterSave(): void
     {
         // Regenerate the resume content when job details are updated
-        GenerateResumeJob::dispatch($this->record);
+        $processingService = app(ResumeProcessingService::class);
+        $processingService->initiateResumeGeneration($this->record);
 
         Notification::make()
             ->success()

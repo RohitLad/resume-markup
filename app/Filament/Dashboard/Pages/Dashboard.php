@@ -1,7 +1,7 @@
 <?php
 namespace App\Filament\Dashboard\Pages;
 
-use App\Jobs\ParseResumeJob;
+use App\Services\ResumeProcessingService;
 use App\Models\Profile;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -71,8 +71,9 @@ class Dashboard extends Page implements HasForms
                                 $fileName = time() . '_' . $temporaryUpload->getClientOriginalName();
                                 $storedPath = Storage::disk('public')->putFileAs('resumes', $temporaryUpload, $fileName);
 
-                                // Dispatch the job with the stored path
-                                ParseResumeJob::dispatch(auth()->id(), $storedPath);
+                                // Initiate resume parsing
+                                $processingService = app(ResumeProcessingService::class);
+                                $processingService->initiateResumeParsing(auth()->id(), $storedPath);
 
                                 Notification::make()
                                     ->success()
@@ -646,36 +647,6 @@ class Dashboard extends Page implements HasForms
                     ->columnSpanFull(),
             ])
             ->statePath('data');
-    }
-
-    protected function processResumeFile($file): void
-    {
-        try {
-            // In Filament FileUpload, afterStateUpdated receives the stored file path
-            // The file is stored in storage/app/public/resumes/ directory
-            $filePath = storage_path('app/public/' . $file);
-
-            // Verify file exists before dispatching
-            if (!file_exists($filePath)) {
-                throw new \Exception('Uploaded file not found at: ' . $filePath);
-            }
-
-            // Dispatch the job for async processing
-            ParseResumeJob::dispatch(auth()->id(), $filePath);
-
-            Notification::make()
-                ->info()
-                ->title('Resume Processing Started')
-                ->body('Your resume is being processed. You will be notified when it\'s ready.')
-                ->send();
-
-        } catch (\Exception $e) {
-            Notification::make()
-                ->danger()
-                ->title('Processing Failed')
-                ->body('Failed to start resume processing: ' . $e->getMessage())
-                ->send();
-        }
     }
 
     protected function getActions(): array
