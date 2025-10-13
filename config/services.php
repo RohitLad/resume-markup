@@ -105,6 +105,12 @@ return [
         'from' => env('TWILIO_FROM'),
     ],
 
-
+    'n8n' => [
+        'url' => env('N8N_URL'),
+        'api_key' => env('N8N_API_KEY'),
+        'endpoints' => [
+            'generate_resume' => '',
+        ],
+    ],
 
 ];
