@@ -611,8 +611,11 @@ class Dashboard extends Page implements HasForms
     protected function processResumeFile($file): void
     {
         try {
+            // Get the full path to the uploaded file
+            $filePath = storage_path('app/public/' . $file);
+
             // Dispatch the job for async processing
-            ParseResumeJob::dispatch(auth()->id(), $file->getRealPath());
+            ParseResumeJob::dispatch(auth()->id(), $filePath);
 
             Notification::make()
                 ->info()

@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Profile;
-use App\Services\OpenAIService;
+use App\Services\AIService;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Storage;
@@ -37,8 +37,8 @@ class ParseResumeJob implements ShouldQueue
         copy($this->filePath, $tempPath);
 
         try {
-            $openAIService = app(OpenAIService::class);
-            $parsedData = $openAIService->parseResumePdf($tempPath);
+            $aiService = app(AIService::class);
+            $parsedData = $aiService->parseResumePdf($tempPath);
 
             // Merge with empty structure to ensure all fields exist
             $parsedData = array_merge($this->getEmptyStructure(), $parsedData);
