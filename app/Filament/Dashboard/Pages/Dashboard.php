@@ -2,6 +2,7 @@
 namespace App\Filament\Dashboard\Pages;
 
 use App\Services\ResumeProcessingService;
+use App\Services\ResumeProcessingStatus;
 use App\Models\Profile;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
@@ -30,17 +31,49 @@ class Dashboard extends Page implements HasForms
 
     public ?array $data = [];
     public bool $showForm = false;
+    public bool $shouldPoll = false;
+    public ?string $lastUpdatedAt = null;
 
     public function mount(): void
+    {
+        $this->loadProfileData();
+
+        // Check if resume parsing is currently active for this user
+        $this->shouldPoll = ResumeProcessingStatus::isParsingActive((int) auth()->id());
+    }
+
+    public function pollForUpdates(): void
+    {
+        $profile = Profile::where('user_id', auth()->id())->first();
+
+        if ($profile && $profile->updated_at && $this->lastUpdatedAt !== $profile->updated_at->toISOString()) {
+            // Profile has been updated, refresh the data
+            $this->loadProfileData();
+
+            // Show success notification
+            Notification::make()
+                ->success()
+                ->title('Resume Parsed')
+                ->body('Your resume has been successfully parsed and the form has been updated.')
+                ->send();
+
+            // Check if parsing is still active (might have finished)
+            $this->shouldPoll = ResumeProcessingStatus::isParsingActive((int) auth()->id());
+        }
+    }
+
+    private function loadProfileData(): void
     {
         $profile = Profile::where('user_id', auth()->id())->first();
 
         if ($profile && !empty($profile->data)) {
             $this->data = $profile->data;
             $this->showForm = true;
+            $this->lastUpdatedAt = $profile->updated_at?->toISOString();
         } else {
             $this->data = [];
             $this->showForm = false;
+            $this->lastUpdatedAt = null;
         }
 
         $this->form->fill($this->data);

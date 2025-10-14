@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Resume;
 use App\Services\N8NService;
+use App\Services\ResumeProcessingStatus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
@@ -28,6 +29,9 @@ class ResumeProcessingService
             ]);
             throw new \Exception('Resume file not found');
         }
+
+        // Mark parsing as active
+        ResumeProcessingStatus::startParsing((int) $userId);
 
         $webhookUrl = $this->n8nService->getWebhookUrl();
         $requestId = $this->n8nService->parseResumePdf($fullPath, $webhookUrl, [
@@ -58,6 +62,9 @@ class ResumeProcessingService
             ]);
             throw new \Exception('No profile data found for resume generation');
         }
+
+        // Mark generation as active for this specific resume
+        ResumeProcessingStatus::startGeneration($resume->id);
 
         $webhookUrl = $this->n8nService->getWebhookUrl();
         $requestId = $this->n8nService->generateResumeMarkdown(

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Profile;
 use App\Models\Resume;
+use App\Services\ResumeProcessingStatus;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -85,6 +86,9 @@ class N8NWebhookJob implements ShouldQueue
             ['data' => $parsedData]
         );
 
+        // Clear the parsing status cache
+        ResumeProcessingStatus::finishParsing((int) $userId);
+
         Log::info('Successfully processed resume parsing webhook', [
             'user_id' => $userId,
             'fields_parsed' => count($parsedData),
@@ -111,6 +115,9 @@ class N8NWebhookJob implements ShouldQueue
         }
 
         $resume->update(['content' => $content]);
+
+        // Clear the generation status cache
+        ResumeProcessingStatus::finishGeneration((int) $resumeId);
 
         Log::info('Successfully processed resume generation webhook', [
             'resume_id' => $resumeId,
