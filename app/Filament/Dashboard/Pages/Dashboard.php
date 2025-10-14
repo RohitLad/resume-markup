@@ -26,6 +26,7 @@ class Dashboard extends Page implements HasForms
 
     protected string $view = 'filament.dashboard.pages.dashboard';
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-text';
+    protected static ?int $navigationSort = 1;
 
     public ?array $data = [];
     public bool $showForm = false;
