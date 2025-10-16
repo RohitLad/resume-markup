@@ -274,8 +274,8 @@ class Dashboard extends Page implements HasForms
                                             ->columnSpanFull(),
 
                                         TagsInput::make('highlights')
-                                            ->label('Key Achievements')
-                                            ->placeholder('Add achievement and press Enter')
+                                            ->label('Highlights')
+                                            ->placeholder('Add a highlight and press Enter')
                                             ->helperText('Press Enter after typing each achievement')
                                             ->columnSpanFull(),
                                     ])

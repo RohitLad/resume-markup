@@ -1,4 +1,4 @@
-<x-filament-panels::page>
+<x-filament-panels::page wire:poll.10s="pollForUpdates">
     @if($shouldPoll)
         <div class="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <div class="flex items-center">
