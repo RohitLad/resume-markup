@@ -1,21 +1,22 @@
 <?php
+
 namespace App\Filament\Dashboard\Pages;
 
+use App\Models\Profile;
 use App\Services\ResumeProcessingService;
 use App\Services\ResumeProcessingStatus;
-use App\Models\Profile;
+use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TagsInput;
-use Filament\Forms\Components\DatePicker;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use BackedEnum;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Tabs;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -26,12 +27,17 @@ class Dashboard extends Page implements HasForms
     use InteractsWithForms;
 
     protected string $view = 'filament.dashboard.pages.dashboard';
+
     protected static BackedEnum|string|null $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?int $navigationSort = 1;
 
     public ?array $data = [];
+
     public bool $showForm = false;
+
     public bool $shouldPoll = false;
+
     public ?string $lastUpdatedAt = null;
 
     public function mount(): void
@@ -66,7 +72,7 @@ class Dashboard extends Page implements HasForms
     {
         $profile = Profile::where('user_id', auth()->id())->first();
 
-        if ($profile && !empty($profile->data)) {
+        if ($profile && ! empty($profile->data)) {
             $this->data = $profile->data;
             $this->showForm = true;
             $this->lastUpdatedAt = $profile->updated_at?->toISOString();
@@ -90,7 +96,7 @@ class Dashboard extends Page implements HasForms
                     ->acceptedFileTypes(['application/pdf'])
                     ->maxSize(10240)
                     ->afterStateUpdated(function ($state) {
-                        if (!$state) {
+                        if (! $state) {
                             return;
                         }
 
@@ -102,7 +108,7 @@ class Dashboard extends Page implements HasForms
                                 $tempPath = $temporaryUpload->getRealPath();
 
                                 // Store the file permanently
-                                $fileName = time() . '_' . $temporaryUpload->getClientOriginalName();
+                                $fileName = time().'_'.$temporaryUpload->getClientOriginalName();
                                 $storedPath = Storage::disk('public')->putFileAs('resumes', $temporaryUpload, $fileName);
 
                                 // Initiate resume parsing
@@ -226,13 +232,13 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Social Profile')
                                     ->columnSpanFull()
-                                    ->itemLabel(fn(array $state): ?string => $state['network'] ?? 'Social Profile'),
+                                    ->itemLabel(fn (array $state): ?string => $state['network'] ?? 'Social Profile'),
                             ]),
 
                         // Work Experience Tab
                         Tabs\Tab::make('Experience')
                             ->icon('heroicon-o-briefcase')
-                            ->badge(fn() => count($this->data['work'] ?? []))
+                            ->badge(fn () => count($this->data['work'] ?? []))
                             ->schema([
                                 Repeater::make('work')
                                     ->label('Work Experience')
@@ -283,8 +289,7 @@ class Dashboard extends Page implements HasForms
                                     ->addActionLabel('Add Work Experience')
                                     ->collapsible()
                                     ->itemLabel(
-                                        fn(array $state): ?string =>
-                                        ($state['position'] ?? 'Position') . ' at ' . ($state['name'] ?? 'Company')
+                                        fn (array $state): ?string => ($state['position'] ?? 'Position').' at '.($state['name'] ?? 'Company')
                                     )
                                     ->columnSpanFull()
                                     ->reorderable(),
@@ -293,7 +298,7 @@ class Dashboard extends Page implements HasForms
                         // Education Tab
                         Tabs\Tab::make('Education')
                             ->icon('heroicon-o-academic-cap')
-                            ->badge(fn() => count($this->data['education'] ?? []))
+                            ->badge(fn () => count($this->data['education'] ?? []))
                             ->schema([
                                 Repeater::make('education')
                                     ->schema([
@@ -339,8 +344,7 @@ class Dashboard extends Page implements HasForms
                                     ->addActionLabel('Add Education')
                                     ->collapsible()
                                     ->itemLabel(
-                                        fn(array $state): ?string =>
-                                        ($state['studyType'] ?? 'Degree') . ' - ' . ($state['institution'] ?? 'Institution')
+                                        fn (array $state): ?string => ($state['studyType'] ?? 'Degree').' - '.($state['institution'] ?? 'Institution')
                                     )
                                     ->columnSpanFull()
                                     ->reorderable(),
@@ -349,7 +353,7 @@ class Dashboard extends Page implements HasForms
                         // Skills Tab
                         Tabs\Tab::make('Skills')
                             ->icon('heroicon-o-sparkles')
-                            ->badge(fn() => count($this->data['skills'] ?? []))
+                            ->badge(fn () => count($this->data['skills'] ?? []))
                             ->schema([
                                 Repeater::make('skills')
                                     ->schema([
@@ -382,9 +386,8 @@ class Dashboard extends Page implements HasForms
                                     ->addActionLabel('Add Skill Category')
                                     ->collapsible()
                                     ->itemLabel(
-                                        fn(array $state): ?string =>
-                                        ($state['name'] ?? 'Skill Category') .
-                                        ($state['level'] ? ' (' . $state['level'] . ')' : '')
+                                        fn (array $state): ?string => ($state['name'] ?? 'Skill Category').
+                                        ($state['level'] ? ' ('.$state['level'].')' : '')
                                     )
                                     ->columnSpanFull()
                                     ->reorderable(),
@@ -393,7 +396,7 @@ class Dashboard extends Page implements HasForms
                         // Projects Tab
                         Tabs\Tab::make('Projects')
                             ->icon('heroicon-o-rocket-launch')
-                            ->badge(fn() => count($this->data['projects'] ?? []))
+                            ->badge(fn () => count($this->data['projects'] ?? []))
                             ->schema([
                                 Repeater::make('projects')
                                     ->schema([
@@ -433,7 +436,7 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Project')
                                     ->collapsible()
-                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Project')
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Project')
                                     ->columnSpanFull()
                                     ->reorderable(),
                             ]),
@@ -441,7 +444,7 @@ class Dashboard extends Page implements HasForms
                         // Certificates & Awards Tab
                         Tabs\Tab::make('Certificates & Awards')
                             ->icon('heroicon-o-trophy')
-                            ->badge(fn() => count($this->data['certificates'] ?? []) + count($this->data['awards'] ?? []))
+                            ->badge(fn () => count($this->data['certificates'] ?? []) + count($this->data['awards'] ?? []))
                             ->schema([
                                 Repeater::make('certificates')
                                     ->label('Certificates')
@@ -471,7 +474,7 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Certificate')
                                     ->collapsible()
-                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Certificate')
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Certificate')
                                     ->columnSpanFull()
                                     ->reorderable(),
 
@@ -503,7 +506,7 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Award')
                                     ->collapsible()
-                                    ->itemLabel(fn(array $state): ?string => $state['title'] ?? 'Award')
+                                    ->itemLabel(fn (array $state): ?string => $state['title'] ?? 'Award')
                                     ->columnSpanFull()
                                     ->reorderable(),
                             ]),
@@ -537,9 +540,8 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Language')
                                     ->itemLabel(
-                                        fn(array $state): ?string =>
-                                        ($state['language'] ?? 'Language') .
-                                        ($state['fluency'] ? ' - ' . $state['fluency'] : '')
+                                        fn (array $state): ?string => ($state['language'] ?? 'Language').
+                                        ($state['fluency'] ? ' - '.$state['fluency'] : '')
                                     )
                                     ->columnSpanFull()
                                     ->reorderable(),
@@ -590,8 +592,7 @@ class Dashboard extends Page implements HasForms
                                     ->addActionLabel('Add Volunteer Experience')
                                     ->collapsible()
                                     ->itemLabel(
-                                        fn(array $state): ?string =>
-                                        ($state['position'] ?? 'Role') . ' at ' . ($state['organization'] ?? 'Organization')
+                                        fn (array $state): ?string => ($state['position'] ?? 'Role').' at '.($state['organization'] ?? 'Organization')
                                     )
                                     ->columnSpanFull()
                                     ->reorderable(),
@@ -629,7 +630,7 @@ class Dashboard extends Page implements HasForms
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Publication')
                                     ->collapsible()
-                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Publication')
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Publication')
                                     ->columnSpanFull()
                                     ->reorderable(),
 
@@ -650,7 +651,7 @@ class Dashboard extends Page implements HasForms
                                     ])
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Interest')
-                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Interest')
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Interest')
                                     ->columnSpanFull()
                                     ->reorderable(),
 
@@ -670,7 +671,7 @@ class Dashboard extends Page implements HasForms
                                     ])
                                     ->defaultItems(0)
                                     ->addActionLabel('Add Reference')
-                                    ->itemLabel(fn(array $state): ?string => $state['name'] ?? 'Reference')
+                                    ->itemLabel(fn (array $state): ?string => $state['name'] ?? 'Reference')
                                     ->columnSpanFull()
                                     ->reorderable(),
                             ]),

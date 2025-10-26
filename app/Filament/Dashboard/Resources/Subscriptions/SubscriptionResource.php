@@ -39,6 +39,7 @@ class SubscriptionResource extends Resource
     protected static ?string $model = Subscription::class;
 
     protected static string|\BackedEnum|null $navigationIcon = 'heroicon-o-fire';
+
     protected static ?int $navigationSort = 4;
 
     public static function form(Schema $schema): Schema

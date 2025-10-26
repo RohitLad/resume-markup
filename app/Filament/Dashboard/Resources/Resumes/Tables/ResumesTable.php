@@ -67,7 +67,7 @@ class ResumesTable
                             ->body('Your resume is being regenerated with the latest information.')
                             ->send();
                     })
-                    ->visible(fn ($record) => !empty($record->content)),
+                    ->visible(fn ($record) => ! empty($record->content)),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

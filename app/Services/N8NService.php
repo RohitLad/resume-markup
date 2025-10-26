@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Log;
 class N8NService
 {
     private const DEFAULT_TIMEOUT = 10;
+
     private const CONNECTION_TEST_TIMEOUT = 10;
 
     private Client $client;
@@ -79,7 +80,7 @@ class N8NService
                 'request_id' => $requestId,
                 'job_title' => $jobTitle,
             ]);
-            throw new \Exception('Failed to initiate resume generation: ' . $e->getMessage(), 0, $e);
+            throw new \Exception('Failed to initiate resume generation: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -101,7 +102,7 @@ class N8NService
             'file_size' => $fileSize,
             'file_size_mb' => round($fileSize / 1024 / 1024, 2),
             'filename' => basename($filePath),
-            'webhook_url' => $webhookUrl
+            'webhook_url' => $webhookUrl,
         ]);
 
         try {
@@ -130,7 +131,7 @@ class N8NService
                     'status' => $statusCode,
                     'body' => $body,
                     'url' => $fullUrl,
-                    'request_id' => $requestId
+                    'request_id' => $requestId,
                 ]);
                 throw new \Exception("n8n workflow failed with status {$statusCode}: {$body}");
             }
@@ -146,9 +147,9 @@ class N8NService
             $this->logError('n8n PDF parsing request failed', $e, $fullUrl, 0, [
                 'request_id' => $requestId,
                 'file_path' => $filePath,
-                'file_size' => $fileSize
+                'file_size' => $fileSize,
             ]);
-            throw new \Exception('Failed to initiate resume PDF parsing: ' . $e->getMessage(), 0, $e);
+            throw new \Exception('Failed to initiate resume PDF parsing: '.$e->getMessage(), 0, $e);
         }
     }
 
@@ -159,9 +160,10 @@ class N8NService
     {
         try {
             $n8nUrl = config('services.n8n.url');
-            
-            if (!$n8nUrl) {
+
+            if (! $n8nUrl) {
                 Log::warning('N8N URL not configured');
+
                 return false;
             }
 
@@ -169,16 +171,17 @@ class N8NService
             $response = $client->request('GET', $n8nUrl, ['http_errors' => false]);
 
             $isSuccessful = $response->getStatusCode() >= 200 && $response->getStatusCode() < 300;
-            
+
             Log::info('N8N connection test', [
                 'success' => $isSuccessful,
-                'status' => $response->getStatusCode()
+                'status' => $response->getStatusCode(),
             ]);
 
             return $isSuccessful;
 
         } catch (\Exception $e) {
             Log::error('n8n connection test failed', ['error' => $e->getMessage()]);
+
             return false;
         }
     }
@@ -189,14 +192,14 @@ class N8NService
     private function buildUrl(string $configKey, string $defaultEndpoint): string
     {
         $n8nUrl = config('services.n8n.url');
-        
-        if (!$n8nUrl) {
+
+        if (! $n8nUrl) {
             throw new \Exception('N8N URL not configured in services.n8n.url');
         }
 
         $endpoint = config("services.n8n.endpoints.{$configKey}", $defaultEndpoint);
-        
-        return rtrim($n8nUrl, '/') . '/' . ltrim($endpoint, '/');
+
+        return rtrim($n8nUrl, '/').'/'.ltrim($endpoint, '/');
     }
 
     /**
@@ -205,9 +208,9 @@ class N8NService
     private function getHeaders(): array
     {
         $headers = [];
-        
+
         $apiKey = config('services.n8n.api_key');
-        
+
         if ($apiKey) {
             $headers['API_KEY'] = $apiKey;
         }
@@ -221,17 +224,17 @@ class N8NService
     private function extractContent(array $data, array $possibleKeys): ?string
     {
         foreach ($possibleKeys as $key) {
-            if (isset($data[$key]) && !empty($data[$key])) {
+            if (isset($data[$key]) && ! empty($data[$key])) {
                 return $data[$key];
             }
         }
 
         Log::error('Invalid n8n response format - missing expected content keys', [
             'expected_keys' => $possibleKeys,
-            'actual_keys' => array_keys($data)
+            'actual_keys' => array_keys($data),
         ]);
-        
-        throw new \Exception('Invalid response from n8n workflow - missing content in keys: ' . implode(', ', $possibleKeys));
+
+        throw new \Exception('Invalid response from n8n workflow - missing content in keys: '.implode(', ', $possibleKeys));
     }
 
     /**
@@ -246,9 +249,9 @@ class N8NService
         if (json_last_error() !== JSON_ERROR_NONE) {
             Log::error('Failed to parse JSON response', [
                 'raw_body_preview' => substr($rawBody, 0, 200),
-                'json_error' => json_last_error_msg()
+                'json_error' => json_last_error_msg(),
             ]);
-            throw new \Exception('Invalid JSON response from n8n workflow: ' . json_last_error_msg());
+            throw new \Exception('Invalid JSON response from n8n workflow: '.json_last_error_msg());
         }
 
         return $data;
@@ -262,12 +265,12 @@ class N8NService
         // The response may be wrapped in 'data' or 'content' or be direct
         $parsedData = $data['data'] ?? $data['content'] ?? $data;
 
-        if (!is_array($parsedData)) {
+        if (! is_array($parsedData)) {
             Log::error('Invalid response format - expected array', [
                 'data_type' => gettype($parsedData),
-                'full_response_keys' => array_keys($data)
+                'full_response_keys' => array_keys($data),
             ]);
-            throw new \Exception('Invalid response format from n8n workflow - expected array, got ' . gettype($parsedData));
+            throw new \Exception('Invalid response format from n8n workflow - expected array, got '.gettype($parsedData));
         }
 
         return $parsedData;
@@ -278,12 +281,12 @@ class N8NService
      */
     private function validateFile(string $filePath): void
     {
-        if (!file_exists($filePath)) {
-            throw new \Exception('Resume file not found: ' . $filePath);
+        if (! file_exists($filePath)) {
+            throw new \Exception('Resume file not found: '.$filePath);
         }
 
-        if (!is_readable($filePath)) {
-            throw new \Exception('Resume file is not readable: ' . $filePath);
+        if (! is_readable($filePath)) {
+            throw new \Exception('Resume file is not readable: '.$filePath);
         }
     }
 
@@ -303,7 +306,7 @@ class N8NService
             ? config('app.url')
             : config('app.tunnel_url', config('app.url'));
 
-        return rtrim($baseUrl, '/') . '/api/n8n/webhook';
+        return rtrim($baseUrl, '/').'/api/n8n/webhook';
     }
 
     /**

@@ -1,0 +1,515 @@
+{
+    "profile": {
+        "name": "Rohit Lad",
+        "location": "Hamburg, Germany",
+        "email": "[rohit.lad.sae@gmail.com](mailto:rohit.lad.sae@gmail.com)",
+        "phone": "+49 15112763381",
+        "website": "[https://rohits.space/](https://rohits.space/)",
+        "linkedin": "[https://www.linkedin.com/in/rohit-lad-71759966](https://www.linkedin.com/in/rohit-lad-71759966)",
+        "one_line_summary": "Applied ML & simulation engineer with 7+ years building high-performance simulation, optimization and production ML/data platforms at Airbus; bridges numerical methods, MLOps and pragmatic software delivery.",
+        "source": "Resume/CV and portfolio. "
+    },
+    "professional_story": {
+        "narrative": "Rohit is an engineer who started in mechanical engineering and numerical simulation, then layered optimization, high-performance simulation and AI to become a cross-cutting technical lead in Data Science and ML for aerospace manufacturing and defense. Early work focused on trajectory planning, numerical optimization and parallel simulation (128-core platforms) for operational analysis; later he moved into production ML and analytics—building data pipelines, RAG-based search/troubleshooting assistants, and enterprise dashboards used daily by manufacturing teams. He combines rigorous math/numerical reasoning with pragmatic software engineering and product-minded delivery, producing measurable business value (enterprise tools delivering ~€300K, platforms used by 1,400+ daily users). This is a profile of a builder who comfortably moves from research-grade algorithms to robust, monitored production systems while mentoring cross-cultural teams. ",
+        "why_it_matters": "Unites deep technical rigor (PDEs, RL, QP, parallel computing) with product delivery and domain knowledge in aerospace/manufacturing—ideal for roles needing both algorithmic creativity and shipping reliable, high-impact systems."
+    },
+    "expertise_domains": [
+        {
+            "domain": "Machine Learning & Data Science",
+            "unified_skills": [
+                {
+                    "skill": "Supervised learning (classification & regression)",
+                    "sources": "Projects, Certifications, Airbus Data Scientist role. ",
+                    "inference_chain": "Thesis & projects reference ML for classification (medical image decision tree project, Coursera ML); professional role lists classification & regression tasks for domain-specific problems.",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "Deep learning (CNNs, RNNs/sequence models, transfer learning)",
+                    "sources": "Deep Learning Specialization, AI for Medical Diagnosis, project list (medical image classification), tools: Keras/TensorFlow. ",
+                    "inference_chain": "Completed DL specialization covering CNNs/sequence models and lists Keras/TensorFlow as tools; applied to medical image classification project.",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "LLMs, Retrieval Augmented Generation (RAG) and vector search",
+                    "sources": "Resume projects and current role mention RAG, vector embedding & retrieval, context-based AI search engine, and 2025 CrewAI certification. ",
+                    "inference_chain": "Explicit mention of RAG and vector embedding; recent certification on multi-agent/LLM orchestration suggests up-to-date practical knowledge of LLM tooling and orchestration patterns.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Reinforcement learning & custom RL environments",
+                    "sources": "Created custom RL environment for autonomous agents; Deep Learning specialization + projects. ",
+                    "inference_chain": "Listing of RL environment creation implies knowledge of environment design (OpenAI Gym-like APIs), reward shaping, training pipelines and simulation integration.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Model evaluation, validation and production monitoring",
+                    "sources": "Production ML responsibilities and enterprise tool delivery; mentorship in production-grade NLP solutions. ",
+                    "inference_chain": "Deploying tools used by 1,400+ users and delivering business value requires monitoring, validation metrics, and operational evaluation (drift detection, performance SLAs).",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Feature engineering, data labeling and dataset maintenance",
+                    "sources": "Data pipelines for ontology objects, dataset scheduling & maintenance in projects. ",
+                    "inference_chain": "Building pipelines and maintaining datasets implies experience in feature extraction, label hygiene, dataset versioning and ETL for ML.",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "NLP techniques beyond LLMs (classification, domain-specific text processing)",
+                    "sources": "Resume mentions domain-specific classification & NLP solutions, Coursera NLP exposure in DL specialization. ",
+                    "inference_chain": "Implementing contextual search & domain classification indicates knowledge of tokenization, embeddings, fine-tuning, intent classification and evaluation.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "MLOps & model deployment (pipelines, Docker, monitoring, orchestration)",
+                    "sources": "Tools list (Docker, AWS), deployment of enterprise tools, mentoring on NLP productionization. ",
+                    "inference_chain": "Production systems and Docker/AWS usage imply containerization, CI/CD, environment reproducibility, infrastructure as code familiarity and monitoring practices.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Scalable ML (MPI, parallel training/inference design)",
+                    "sources": "Scalable CART with MPI project; high-performance simulation experience. ",
+                    "inference_chain": "Implementing MPI-based algorithms requires understanding of distributed memory parallelism, communication patterns (MPI collectives), data partitioning and scaling trade-offs.",
+                    "confidence": "strong"
+                }
+            ],
+            "domain_summary": "Covers the full ML lifecycle from dataset engineering, classical & deep learning, to LLMs/RAG and production MLOps—applies at scale for enterprise aerospace/manufacturing problems. Evidence: projects and role responsibilities show both research-grade algorithms and operational deployment. "
+        },
+        {
+            "domain": "Numerical Optimization & Simulation",
+            "unified_skills": [
+                {
+                    "skill": "Numerical optimization methods (gradient-based, QP, MILP)",
+                    "sources": "Thesis topics, trajectory planning, formation flight using quadratic programming, tests with MILP and other techniques. ",
+                    "inference_chain": "Developed QP-based formation algorithms and tested MILP/informed sampling — implies mastery of convex/non-convex optimization, solvers (IPOPT, Gurobi/CVX), and constraint handling.",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "High-performance computing & parallel simulation (MPI, multi-core scaling)",
+                    "sources": "128-core parallel simulations; MPI-based CART project. ",
+                    "inference_chain": "Running simulations across 128 cores and MPI projects shows competence in parallelizing code, profiling, memory usage and distributed scheduling.",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "Physics-based modeling (guidance, sensors, radar, flight dynamics)",
+                    "sources": "Modeled missile guidance, sensor arrays, radar simulations and air-to-air combat maneuvers. ",
+                    "inference_chain": "Creating physics-based models demands domain knowledge (kinematics, dynamics), signal processing for sensors, and integrating these into simulation frameworks.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Trajectory planning & distributed consensus algorithms",
+                    "sources": "Flight trajectory planning for swarm, distributed consensus algorithm, formation flight project. ",
+                    "inference_chain": "Implies knowledge of continuous trajectory generation, collision avoidance heuristics, re-planning, and multi-agent coordination.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Simulation system engineering (scenario design, edge-case testing, resilience)",
+                    "sources": "Built simulation frameworks to test algorithm resilience and scenario analysis. ",
+                    "inference_chain": "Developing simulation frameworks requires test harnesses, scenario generation, fault injection (comm delays, sensor faults), and result reproducibility.",
+                    "confidence": "strong"
+                }
+            ],
+            "domain_summary": "Expertise spans mathematical foundations (PDEs, optimization), building and scaling simulations, and translating simulation outputs into operational insights—directly applied in defense/aerospace contexts. "
+        },
+        {
+            "domain": "Software Engineering, Data Engineering & DevOps",
+            "unified_skills": [
+                {
+                    "skill": "Production-grade software development (architecture, code review, deployments)",
+                    "sources": "Technical lead duties, managing code reviews, merges, deployments; enterprise tool delivery at Airbus. ",
+                    "inference_chain": "Leading enterprise tools implies designing system architecture, enforcing code quality, CI/CD pipelines and release management.",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "Data engineering (ETL, pipeline scheduling, dataset versioning, SQL/PySpark)",
+                    "sources": "Architected extraction/transformation pipelines, PySpark and SQL in tools list, dataset scheduling for ontology objects. ",
+                    "inference_chain": "Supporting mission-critical ontology objects requires robust ETL, orchestration (Airflow-like), data validation and efficient Spark/SQL transformations.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Containerization & deployment (Docker, AWS)",
+                    "sources": "Tools list includes Docker and AWS; enterprise deployments referenced. ",
+                    "inference_chain": "Docker + AWS in context of production systems suggests container-based deployment workflows, ECR/ECS or EKS, and cloud operations knowledge.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Search & indexing systems (ElasticSearch)",
+                    "sources": "Tools list references Elastic Search; RAG projects benefit from indexed search. ",
+                    "inference_chain": "Implementing contextual search requires indexing, mapping, query tuning and integration with embedding stores or vector indexes.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Version control & collaborative engineering (Git, code reviews, merges)",
+                    "sources": "Mentions managing code reviews/merges; standard practice for all software projects. ",
+                    "inference_chain": "Leading code reviews directly indicates deep Git workflow knowledge and collaboration patterns (feature branches, PRs, CI integration).",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "API design, OAuth and integration patterns",
+                    "sources": "Web dev stack includes OAuth, API, and projects like BlipHQ which are API services. ",
+                    "inference_chain": "Building SaaS/API products requires designing RESTful endpoints, auth flows (OAuth), rate limiting and secure integrations.",
+                    "confidence": "strong"
+                }
+            ],
+            "domain_summary": "Bridges algorithmic work and reliable production systems—delivers data products (dashboards, ontology-driven tooling) used daily at scale, with hands-on DevOps and data engineering practices. "
+        },
+        {
+            "domain": "Natural Language Processing, Search & Agent/Automation Systems",
+            "unified_skills": [
+                {
+                    "skill": "Vector embeddings, similarity search and vector stores",
+                    "sources": "Explicit mention of vector embedding & retrieval, RAG and search engine project. ",
+                    "inference_chain": "Implementing retrieval requires embedding selection, vector index choice, similarity metrics and latency/throughput trade-offs.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "RAG pipelines & context management (prompting, chunking, retrieval)",
+                    "sources": "Context-based AI search engine project description and RAG references. ",
+                    "inference_chain": "Building troubleshooting assistant implies chunking documents, designing retrieval prompts, citation handling and hallucination mitigation.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Agent orchestration & multi-agent patterns",
+                    "sources": "2025 CrewAI certification: Multi AI Agent Systems; resume references Agent AI. ",
+                    "inference_chain": "Certification coupled with practical projects implies awareness of agent frameworks, task decomposition, and orchestration strategies.",
+                    "confidence": "moderate"
+                }
+            ],
+            "domain_summary": "Practically experienced with modern retrieval/LLM stacks for knowledge-intensive applications and automation via agent patterns—applied in production troubleshooting assistants."
+        },
+        {
+            "domain": "Web Development & SaaS Product Engineering",
+            "unified_skills": [
+                {
+                    "skill": "Full-stack web development (Laravel/PHP, Typescript/Node, CSS, Livewire)",
+                    "sources": "Skills section and project descriptions for BlipHQ and SkillOutreach. ",
+                    "inference_chain": "Explicit stack listing plus SaaS projects indicates hands-on development across backend, frontend, and interactive frameworks.",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "Database management, Redis caching and session management",
+                    "sources": "Web Dev skills listing Redis and Database Management. ",
+                    "inference_chain": "SaaS and notification services require DB schema design, caching, and session/security considerations.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "OAuth, third-party integrations and real-time notifications",
+                    "sources": "BlipHQ project (real-time notifications to Telegram/Discord), mention of OAuth. ",
+                    "inference_chain": "Building cross-platform notification APIs implies webhook handling, auth flows and rate limit/resiliency design.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Product thinking, business development for SaaS",
+                    "sources": "Projects described as services/SaaS; SkillOutreach positioning. ",
+                    "inference_chain": "Running indie SaaS projects indicates product-market thinking, MVP building, and customer-focused iteration.",
+                    "confidence": "moderate"
+                }
+            ],
+            "domain_summary": "Capable of delivering SaaS end-to-end—from APIs and integrations to frontend and productization—complementing ML systems with usable interfaces."
+        },
+        {
+            "domain": "Leadership, Mentoring & Cross-Functional Collaboration",
+            "unified_skills": [
+                {
+                    "skill": "Technical leadership and roadmap planning",
+                    "sources": "Technical Lead for enterprise tools, manages strategic improvement roadmaps. ",
+                    "inference_chain": "Leading technical direction for enterprise tools requires prioritization, stakeholder alignment and balancing technical debt vs features.",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "Mentoring and talent development",
+                    "sources": "Mentored junior engineers and international talent; technical advisor role. ",
+                    "inference_chain": "Mentoring junior engineers to production-readiness indicates coaching, code review practice and onboarding processes.",
+                    "confidence": "certain"
+                },
+                {
+                    "skill": "Stakeholder communication & cross-program coordination",
+                    "sources": "Led digital transformation initiatives empowering aircraft managers and cross-program teams. ",
+                    "inference_chain": "Delivering dashboards and analytics for operational teams requires translating technical outputs into actionable KPIs and aligning cross-functional goals.",
+                    "confidence": "strong"
+                },
+                {
+                    "skill": "Impact measurement and business-value orientation",
+                    "sources": "Enterprise tools delivering €300K in business value; user metrics (1,400+ daily active). ",
+                    "inference_chain": "Quantified business outcomes indicate an orientation towards measurable impact and ROI-driven decision making.",
+                    "confidence": "certain"
+                }
+            ],
+            "domain_summary": "Demonstrated capability to lead technical efforts, mentor engineers and translate engineering work into measurable business impact in large organizations."
+        }
+    ],
+    "experience_timeline": [
+        {
+            "role": "Data Scientist & Machine Learning Engineer",
+            "organization": "Airbus",
+            "location": "Hamburg, Germany",
+            "dates": "March 2022 - Present",
+            "high_level_accomplishments": [
+                "Led digital transformation initiatives delivering intuitive KPI dashboards for aircraft managers and cross-program teams; enabled data-driven decision making. ",
+                "Served as Technical Lead for multiple enterprise tools with reported €300K business value; managed code reviews, merges, deployments and strategic roadmaps. ",
+                "Architected data extraction and transformation pipelines supporting ontology objects for aircraft assembly quality control with 1,400+ daily active users. ",
+                "Mentored international talent and advised on advanced NLP solutions including RAG and vector search. "
+            ],
+            "inferred_responsibilities": [
+                "Define product requirements with manufacturing stakeholders, prioritize ML features and produce KPIs/SLAs.",
+                "Design and operate ETL pipelines, dataset governance, and production monitoring for ML models and dashboards.",
+                "Run cross-team code-review processes and enforce engineering practices (testing, CI/CD)."
+            ],
+            "impact_metrics": {
+                "business_value": "€300K (enterprise tools). ",
+                "user_metrics": "1,400+ daily active users on manufacturing operations tools. "
+            }
+        },
+        {
+            "role": "Software Engineer - Artificial Intelligence, Modeling & Simulation",
+            "organization": "Airbus Defense & Space",
+            "location": "Manching, Germany",
+            "dates": "September 2018 - February 2022",
+            "high_level_accomplishments": [
+                "Led development of a parallel air-combat simulation platform executing across 128 cores and reduced scenario analysis time from weeks to days. ",
+                "Developed tactical planning algorithms, behavior trees and weapon allocation optimization improving simulation granularity. ",
+                "Modeled missile guidance, sensor arrays and radar simulations achieving 75% speedup over prior benchmarks. ",
+                "Built custom RL environment for training autonomous agents and mentored junior engineers. "
+            ],
+            "inferred_responsibilities": [
+                "Architect high-performance simulation frameworks, parallelize compute-bound workloads, and profile/optimize performance.",
+                "Translate operational requirements into simulation scenarios and validate models against benchmarks.",
+                "Integrate AI components (RL agents, planning algorithms) into simulation pipelines."
+            ]
+        },
+        {
+            "role": "Software Engineer - Algorithms & Trajectory Planning (via Modis GmbH)",
+            "organization": "Airbus Defense & Space (contract)",
+            "location": "Manching, Germany",
+            "dates": "February 2018 - August 2018",
+            "high_level_accomplishments": [
+                "Developed decentralized UAV formation flight algorithm with high-order continuous trajectory planning using quadratic programming. ",
+                "Tested path planning algorithms (MILP, potential fields, informed sampling) and built resilient simulation frameworks for edge-case analysis. "
+            ],
+            "inferred_responsibilities": [
+                "Prototype and validate trajectory planning approaches, perform numerical stability analysis, and simulate sensor/communication faults."
+            ]
+        }
+    ],
+    "projects": [
+        {
+            "title": "Scalable CART Decision Tree for Medical Image Classification (MPI)",
+            "context": "RWTH/Airbus project",
+            "explicit_description": "Scalable CART Decision Tree algorithm for medical image classification using MPI. ",
+            "deep_dive": {
+                "technical_scope": "Parallel decision tree training across MPI nodes, handling data partitioning, aggregation of splits, and scalability challenges.",
+                "inferred_skills": [
+                    "MPI programming, parallel IO, balancing compute vs communication, memory-efficient data structures",
+                    "Statistical understanding of CART splitting criteria, pruning and cross-validation"
+                ],
+                "impact": "Demonstrates practical experience scaling traditional algorithms for large image datasets and bridging HPC with ML pipelines."
+            }
+        },
+        {
+            "title": "Context-based AI Search Engine / Troubleshooting Non-Conformity Assistant",
+            "context": "Airbus production support",
+            "explicit_description": "RAG-based contextual search engine for troubleshooting non-conformity in production; vector embedding and retrieval. ",
+            "deep_dive": {
+                "technical_scope": "Document ingestion, chunking, embedding generation, vector index management, retrieval + LLM prompt orchestration, UI/UX integration into FAL teams.",
+                "inferred_skills": [
+                    "Embedding selection, index tuning, prompt engineering, hallucination mitigation, evaluation (retrieval precision/recall)",
+                    "Operationalization: scalable inference, latency constraints, logging/citation tracing for audits"
+                ],
+                "impact": "Enables frontline manufacturing teams to find contextual troubleshooting info, reducing time to resolution and standardizing knowledge access."
+            }
+        },
+        {
+            "title": "Flight trajectory planning for swarms & formation flight algorithms",
+            "context": "Academic + defense projects",
+            "explicit_description": "Distributed consensus algorithms and quadratic programming for formation flight and swarm trajectory planning. ",
+            "deep_dive": {
+                "technical_scope": "Continuous high-order trajectory generation, collision avoidance, re-planning under constraints, numerical stability and optimization solver integration.",
+                "inferred_skills": [
+                    "Control theory basics, convex optimization, solver interfacing, multi-agent coordination and robustness analysis"
+                ],
+                "impact": "Practical demonstration of designing algorithms robust to real-world communication and sensor uncertainties."
+            }
+        },
+        {
+            "title": "BlipHQ (archived) & SkillOutreach (SaaS)",
+            "context": "Indie web/SaaS projects",
+            "explicit_description": "BlipHQ: single API for real-time notifications to messaging platforms. SkillOutreach: AI SaaS for generating personalized LinkedIn outreach and discovering candidate emails. ",
+            "deep_dive": {
+                "technical_scope": "API design, OAuth integrations, webhook handling, background workers, user management, email discovery integrations and message personalization via ML/templating.",
+                "inferred_skills": [
+                    "SaaS architecture, product-market fit experiments, user onboarding metrics, secure third-party integrations and scaling considerations"
+                ],
+                "impact": "Shows product-building instincts and the ability to ship customer-facing features outside of corporate contexts."
+            }
+        }
+    ],
+    "education": [
+        {
+            "degree": "MSc. Simulation Sciences",
+            "institution": "RWTH Aachen University",
+            "year": 2018,
+            "thesis": "Developing an Efficient Weather Avoidance Algorithm for Remotely Piloted Aircraft @ Airbus",
+            "focus_areas": "Machine Learning, High-Performance Computing, Numerical Optimization, Iterative Solvers, Partial Differential Equations. ",
+            "evidence": "Thesis PDF available on personal site. "
+        },
+        {
+            "degree": "B.E. Mechanical Engineering",
+            "institution": "BITS Pilani",
+            "year": 2015,
+            "notes": "Published research on modal analysis with two papers on vibration of plates. "
+        }
+    ],
+    "certifications": [
+        {
+            "title": "Multi AI Agent Systems",
+            "issuer": "CrewAI / DeepLearning.org",
+            "year": 2025,
+            "context": "Covers LLM automation, agent orchestration, prompt engineering and AI workflow optimization; aligns with RAG/Agent projects in resume. "
+        },
+        {
+            "title": "Machine Learning (Coursera)",
+            "issuer": "Coursera",
+            "year": 2021,
+            "context": "Classical ML foundations referenced in projects and role. "
+        },
+        {
+            "title": "AI for Medical Diagnosis & Prognosis (Coursera)",
+            "issuer": "Coursera",
+            "year": 2020,
+            "context": "Relevant to medical image classification project. "
+        },
+        {
+            "title": "Deep Learning Specialization (Coursera)",
+            "issuer": "Coursera",
+            "year": 2019,
+            "context": "Covers CNNs, ResNets, YOLO and sequence models—supports DL project claims. "
+        }
+    ],
+    "inference_reasoning": {
+        "domain_patterns_recognized": [
+            "Research → Production trajectory: Started with academically deep simulation/optimization work and progressively moved to production ML/data platforms (thesis → defense simulation → Airbus ML tooling). ",
+            "Scale-first mindset: multiple references to parallelization (128 cores, MPI) and enterprise-scale usage (1,400+ DAU), indicating attention to performance and operational constraints. ",
+            "Product and impact orientation: repeated quantification of business value and user metrics (€300K, 1,400+ DAU) reveals bias toward measurable outcomes. "
+        ],
+        "cross_domain_capabilities": {
+            "technical_translation": "Converts mathematical and simulation research into production code and scalable services (PDEs/optimization → ML pipelines → dashboards). ",
+            "systems_thinking": "Understands end-to-end implications: from solver convergence and numerical stability to user-facing latency and maintainability.",
+            "mentorship_to-leadership": "Mentors juniors and leads technical initiatives without necessarily being in a formal people-manager role—evidence of emergent leadership."
+        },
+        "hidden_strengths": [
+            "Bridging HPC and ML: Rare combination of MPI/Multi-core HPC experience together with modern ML/LLM pipelines—valuable for scaling large-model or simulation-augmented ML.",
+            "Operationalizing research: Strong pattern of delivering research ideas into tools that generate measurable business value.",
+            "Domain trustworthiness: Working on manufacturing quality-control ontology objects and defense simulations implies rigorous validation, conservative design and audit-readiness.",
+            "Rapid learning & recency: Continuous upskilling (2019–2025 certifications and modern RAG/Agent work) shows fast adoption of new paradigms."
+        ],
+        "growth_trajectory": {
+            "past": "Mechanical engineering & simulation researcher → algorithm & trajectory planner → parallel simulation & RL developer at defense → transition to production ML and data platform technical lead at Airbus.",
+            "near_term": "Likely to move into senior ML engineering, MLOps/ML platform roles, or lead architect positions bridging ML research and enterprise deployment.",
+            "long_term": "Could scale into Head of ML/AI Engineering or Principal Engineer roles for organizations requiring both deep algorithmic capability and production delivery at scale."
+        }
+    },
+    "skill_constellation": {
+        "technical_clusters": [
+            {
+                "cluster_name": "Core ML & Modeling",
+                "skills": [
+                    "Supervised & unsupervised learning",
+                    "Deep learning (CNNs, RNNs, transfer learning)",
+                    "Reinforcement learning (environment design)",
+                    "Feature engineering & dataset maintenance",
+                    "Model evaluation & monitoring"
+                ]
+            },
+            {
+                "cluster_name": "Numerical Methods & Simulation",
+                "skills": [
+                    "Gradient-based optimization",
+                    "Quadratic programming & MILP",
+                    "PDEs & iterative solvers",
+                    "High-performance computing (MPI, multi-core)",
+                    "Trajectory planning & control"
+                ]
+            },
+            {
+                "cluster_name": "Systems & Data Engineering",
+                "skills": [
+                    "ETL & data pipelines (PySpark, SQL)",
+                    "Docker & cloud deployment (AWS)",
+                    "ElasticSearch & vector search",
+                    "CI/CD, version control (Git)",
+                    "API design & integrations (OAuth, webhooks)"
+                ]
+            },
+            {
+                "cluster_name": "Web & Product Engineering",
+                "skills": [
+                    "Laravel/PHP full-stack development",
+                    "Typescript/Node, Livewire",
+                    "Redis caching",
+                    "SaaS architecture & product thinking",
+                    "Scaling real-time notification systems"
+                ]
+            }
+        ],
+        "soft_skill_clusters": [
+            {
+                "cluster_name": "Leadership & Collaboration",
+                "skills": [
+                    "Technical leadership",
+                    "Roadmap planning",
+                    "Mentorship",
+                    "Cross-functional communication"
+                ]
+            },
+            {
+                "cluster_name": "Operational Execution",
+                "skills": [
+                    "Impact measurement",
+                    "Stakeholder alignment",
+                    "Project delivery",
+                    "Risk & quality management"
+                ]
+            },
+            {
+                "cluster_name": "Problem Solving & Analysis",
+                "skills": [
+                    "Root-cause analysis",
+                    "Scenario testing",
+                    "Edge-case thinking",
+                    "Performance optimization"
+                ]
+            }
+        ],
+        "meta_skills": [
+            "Learning agility — quickly adopting and certifying in new AI paradigms (LLMs/Agents). ",
+            "Bridging theory and practice — converts research into deployable products with measurable ROI.",
+            "Systemic thinking — designs solutions considering numeric stability, performance and user operations together."
+        ]
+    },
+    "professional_metadata": {
+        "languages": [
+            {
+                "language": "English",
+                "proficiency": "Native",
+                "source": "Resume languages list. "
+            },
+            {
+                "language": "German",
+                "proficiency": "Full Professional",
+                "source": "Resume languages list. "
+            }
+        ],
+        "locations_worked": [
+            "Hamburg, Germany (Airbus Data Scientist role). ",
+            "Manching, Germany (Airbus Defense & Space). "
+        ],
+        "publications_and_artifacts": [
+            "Master thesis: Weather Avoidance Algorithm for Remotely Piloted Aircraft (RWTH/Airbus). ",
+            "Scalable Decision Tree report, Heliostat Field Optimization report (links on personal site). ",
+            "Two papers on vibration/modal analysis from B.E. research. "
+        ],
+        "online_presence": {
+            "personal_site": "[https://rohits.space/](https://rohits.space/) (project PDFs and reports). ",
+            "github_or_code": "Not explicit in resume; web portfolio likely contains code/artifacts (personal site). "
+        }
+    }
+}

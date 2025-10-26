@@ -29,17 +29,19 @@ class N8NWebhookJob implements ShouldQueue
                 'success' => $this->payload['success'] ?? null,
             ]);
 
-            if (!isset($this->payload['type'])) {
+            if (! isset($this->payload['type'])) {
                 Log::error('Missing type in webhook payload', ['payload' => $this->payload]);
+
                 return;
             }
 
-            if (!isset($this->payload['success']) || !$this->payload['success']) {
+            if (! isset($this->payload['success']) || ! $this->payload['success']) {
                 Log::error('Webhook indicates failure', [
                     'type' => $this->payload['type'],
                     'error' => $this->payload['error'] ?? 'Unknown error',
                     'request_id' => $this->payload['request_id'] ?? null,
                 ]);
+
                 return;
             }
 
@@ -70,11 +72,12 @@ class N8NWebhookJob implements ShouldQueue
         $userId = $this->payload['user_id'] ?? null;
         $data = $this->payload['content'] ?? null;
 
-        if (!$userId || !$data) {
+        if (! $userId || ! $data) {
             Log::error('Missing user_id or data in parse resume webhook', [
                 'user_id' => $userId,
-                'has_data' => !empty($data),
+                'has_data' => ! empty($data),
             ]);
+
             return;
         }
 
@@ -100,17 +103,19 @@ class N8NWebhookJob implements ShouldQueue
         $resumeId = $this->payload['resume_id'] ?? null;
         $content = $this->payload['content'] ?? null;
 
-        if (!$resumeId || !$content) {
+        if (! $resumeId || ! $content) {
             Log::error('Missing resume_id or content in generate resume webhook', [
                 'resume_id' => $resumeId,
-                'has_content' => !empty($content),
+                'has_content' => ! empty($content),
             ]);
+
             return;
         }
 
         $resume = Resume::find($resumeId);
-        if (!$resume) {
+        if (! $resume) {
             Log::error('Resume not found for webhook processing', ['resume_id' => $resumeId]);
+
             return;
         }
 

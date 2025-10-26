@@ -32,9 +32,9 @@ class ResumeInfolist
                             ->label('')
                             ->columnSpanFull()
                             ->markdown()
-                            ->visible(fn ($record) => !empty($record->content)),
+                            ->visible(fn ($record) => ! empty($record->content)),
                     ])
-                    ->visible(fn ($record) => !empty($record->content))
+                    ->visible(fn ($record) => ! empty($record->content))
                     ->description('This resume was generated specifically for the job above using AI optimization for ATS compatibility and keyword matching.'),
 
                 Section::make('Resume Status')

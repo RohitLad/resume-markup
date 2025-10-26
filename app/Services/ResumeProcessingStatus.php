@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\Cache;
 class ResumeProcessingStatus
 {
     const PARSING_PREFIX = 'resume_parsing:';
+
     const GENERATION_PREFIX = 'resume_generation:';
+
     const TTL_MINUTES = 30;
 
     /**
@@ -15,9 +17,9 @@ class ResumeProcessingStatus
      */
     public static function startParsing(int $userId): void
     {
-        Cache::put(self::PARSING_PREFIX . $userId, [
+        Cache::put(self::PARSING_PREFIX.$userId, [
             'started_at' => now(),
-            'type' => 'parsing'
+            'type' => 'parsing',
         ], now()->addMinutes(self::TTL_MINUTES));
     }
 
@@ -26,7 +28,7 @@ class ResumeProcessingStatus
      */
     public static function isParsingActive(int $userId): bool
     {
-        return Cache::has(self::PARSING_PREFIX . $userId);
+        return Cache::has(self::PARSING_PREFIX.$userId);
     }
 
     /**
@@ -34,7 +36,7 @@ class ResumeProcessingStatus
      */
     public static function finishParsing(int $userId): void
     {
-        Cache::forget(self::PARSING_PREFIX . $userId);
+        Cache::forget(self::PARSING_PREFIX.$userId);
     }
 
     /**
@@ -42,9 +44,9 @@ class ResumeProcessingStatus
      */
     public static function startGeneration(int $resumeId): void
     {
-        Cache::put(self::GENERATION_PREFIX . $resumeId, [
+        Cache::put(self::GENERATION_PREFIX.$resumeId, [
             'started_at' => now(),
-            'type' => 'generation'
+            'type' => 'generation',
         ], now()->addMinutes(self::TTL_MINUTES));
     }
 
@@ -53,7 +55,7 @@ class ResumeProcessingStatus
      */
     public static function isGenerationActive(int $resumeId): bool
     {
-        return Cache::has(self::GENERATION_PREFIX . $resumeId);
+        return Cache::has(self::GENERATION_PREFIX.$resumeId);
     }
 
     /**
@@ -61,6 +63,6 @@ class ResumeProcessingStatus
      */
     public static function finishGeneration(int $resumeId): void
     {
-        Cache::forget(self::GENERATION_PREFIX . $resumeId);
+        Cache::forget(self::GENERATION_PREFIX.$resumeId);
     }
 }

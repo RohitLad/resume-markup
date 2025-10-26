@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\N8NWebhookJob;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class N8NWebhookController extends Controller
@@ -22,9 +22,10 @@ class N8NWebhookController extends Controller
         $apiKey = $request->header('API_KEY') ?: $request->query('api_key');
         if ($apiKey !== config('services.n8n.api_key')) {
             Log::warning('N8N webhook unauthorized', [
-                'provided_key' => substr($apiKey ?: 'none', 0, 10) . '...',
-                'expected_key' => substr(config('services.n8n.api_key') ?: 'none', 0, 10) . '...',
+                'provided_key' => substr($apiKey ?: 'none', 0, 10).'...',
+                'expected_key' => substr(config('services.n8n.api_key') ?: 'none', 0, 10).'...',
             ]);
+
             return response()->json(['error' => 'Unauthorized'], 401);
         }
 

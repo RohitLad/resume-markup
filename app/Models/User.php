@@ -22,16 +22,17 @@ use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail, TwoFactorAuthenticatable
 {
-    use HasApiTokens, HasFactory, HasOneTimePasswords, HasRoles, Notifiable, TwoFactorAuthentication, HasUuids;
+    use HasApiTokens, HasFactory, HasOneTimePasswords, HasRoles, HasUuids, Notifiable, TwoFactorAuthentication;
 
     /**
      * The attributes that are mass assignable.
      *
      * @var array<int, string>
      */
+    protected $keyType = 'string';
 
-    protected $keyType = "string";
     public $incrementing = false;
+
     protected $fillable = [
         'name',
         'email',

@@ -3,16 +3,12 @@
 namespace App\Services;
 
 use App\Models\Resume;
-use App\Services\N8NService;
-use App\Services\ResumeProcessingStatus;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class ResumeProcessingService
 {
-    public function __construct(private N8NService $n8nService)
-    {
-    }
+    public function __construct(private N8NService $n8nService) {}
 
     /**
      * Initiate resume parsing by sending PDF to n8n workflow
@@ -21,7 +17,7 @@ class ResumeProcessingService
     {
         $fullPath = Storage::disk('public')->path($filePath);
 
-        if (!file_exists($fullPath)) {
+        if (! file_exists($fullPath)) {
             Log::error('Resume file not found for parsing', [
                 'user_id' => $userId,
                 'file_path' => $filePath,
@@ -55,7 +51,7 @@ class ResumeProcessingService
         $user = $resume->user;
         $profile = $user->profile;
 
-        if (!$profile || !$profile->data) {
+        if (! $profile || ! $profile->data) {
             Log::warning('Resume generation failed: No profile data found', [
                 'resume_id' => $resume->id,
                 'user_id' => $user->id,
