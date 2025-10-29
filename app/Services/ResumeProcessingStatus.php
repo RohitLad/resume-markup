@@ -44,7 +44,7 @@ class ResumeProcessingStatus
     /**
      * Start resume generation for a specific resume
      */
-    public static function startGeneration(int $resumeId): void
+    public static function startGeneration(string $resumeId): void
     {
         Cache::put(self::GENERATION_PREFIX.$resumeId, [
             'started_at' => now(),
@@ -55,7 +55,7 @@ class ResumeProcessingStatus
     /**
      * Check if resume generation is active for a specific resume
      */
-    public static function isGenerationActive(int $resumeId): bool
+    public static function isGenerationActive(string $resumeId): bool
     {
         return Cache::has(self::GENERATION_PREFIX.$resumeId);
     }
@@ -63,7 +63,7 @@ class ResumeProcessingStatus
     /**
      * Finish resume generation for a specific resume
      */
-    public static function finishGeneration(int $resumeId): void
+    public static function finishGeneration(string $resumeId): void
     {
         Cache::forget(self::GENERATION_PREFIX.$resumeId);
     }

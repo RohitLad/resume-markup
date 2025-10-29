@@ -127,7 +127,7 @@ class ResumeProcessingService
 
         $webhookUrl = $this->n8nService->getWebhookUrl();
         $requestId = $this->n8nService->generateResumeMarkdown(
-            $profile->data,
+            $profile->knowledgebase,
             $resume->job_title,
             $resume->job_description,
             $webhookUrl,

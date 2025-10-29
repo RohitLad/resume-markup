@@ -25,7 +25,7 @@ class N8NService
     /**
      * Generate resume markdown using n8n workflow (async with webhook)
      */
-    public function generateResumeMarkdown(array $profileData, string $jobTitle, string $jobDescription, string $webhookUrl, array $metadata = []): string
+    public function generateResumeMarkdown(array $knowledgeBase, string $jobTitle, string $jobDescription, string $webhookUrl, array $metadata = []): string
     {
         $fullUrl = $this->buildUrl('generate_resume', 'generate-resume');
         $requestId = (string) \Illuminate\Support\Str::uuid();
@@ -36,7 +36,7 @@ class N8NService
             'request_id' => $requestId,
             'job_title' => $jobTitle,
             'webhook_url' => $webhookUrl,
-            'profile_keys' => array_keys($profileData),
+            'knowledgebase_keys' => array_keys($knowledgeBase),
         ]);
 
         try {
@@ -44,7 +44,7 @@ class N8NService
                 'json' => [
                     'job_title' => $jobTitle,
                     'job_description' => $jobDescription,
-                    'profile' => $profileData,
+                    'knowledgebase' => $knowledgeBase,
                     'webhook_url' => $webhookUrl,
                     'metadata' => array_merge($metadata, [
                         'type' => 'generate_resume',
