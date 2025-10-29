@@ -3,6 +3,7 @@
 namespace App\Filament\Dashboard\Resources\Resumes\Tables;
 
 use App\Services\ResumeProcessingService;
+use App\Services\ResumeProcessingStatus;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -59,13 +60,29 @@ class ResumesTable
                     ->modalSubmitActionLabel('Regenerate')
                     ->action(function ($record) {
                         $processingService = app(ResumeProcessingService::class);
-                        $processingService->initiateResumeGeneration($record);
+                        
+                        try {
+                            $processingService->initiateResumeGeneration($record);
 
-                        Notification::make()
-                            ->success()
-                            ->title('Resume Regeneration Started')
-                            ->body('Your resume is being regenerated with the latest information.')
-                            ->send();
+                            Notification::make()
+                                ->success()
+                                ->title('Resume Regeneration Started')
+                                ->body('Your resume is being regenerated with the latest information.')
+                                ->send();
+                        } catch (\Exception $e) {
+                            if (str_contains($e->getMessage(), 'Knowledge base needs to be updated')) {
+                                // Knowledge base needs to be updated first
+                                $processingService->initiateKnowledgeBaseGeneration($record->user_id);
+
+                                Notification::make()
+                                    ->info()
+                                    ->title('Knowledge Base Update Required')
+                                    ->body('Your knowledge base is being updated first. Resume generation will start automatically once complete.')
+                                    ->send();
+                            } else {
+                                throw $e;
+                            }
+                        }
                     })
                     ->visible(fn ($record) => ! empty($record->content)),
             ])

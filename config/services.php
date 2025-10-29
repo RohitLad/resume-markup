@@ -111,6 +111,7 @@ return [
         'webhook_url' => env('N8N_WEBHOOK_URL'),
         'endpoints' => [
             'generate_resume' => 'generate-resume',
+            'generate_knowledgebase' => 'generate-knowledgebase',
             'parse_resume' => 'parse-resume',
         ],
     ],

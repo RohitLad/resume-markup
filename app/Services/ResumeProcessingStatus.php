@@ -10,6 +10,8 @@ class ResumeProcessingStatus
 
     const GENERATION_PREFIX = 'resume_generation:';
 
+    const KNOWLEDGE_BASE_PREFIX = 'knowledge_base_generation:';
+
     const TTL_MINUTES = 30;
 
     /**
@@ -64,5 +66,32 @@ class ResumeProcessingStatus
     public static function finishGeneration(int $resumeId): void
     {
         Cache::forget(self::GENERATION_PREFIX.$resumeId);
+    }
+
+    /**
+     * Start knowledge base generation for a user
+     */
+    public static function startKnowledgeBaseGeneration(int $userId): void
+    {
+        Cache::put(self::KNOWLEDGE_BASE_PREFIX.$userId, [
+            'started_at' => now(),
+            'type' => 'knowledge_base_generation',
+        ], now()->addMinutes(self::TTL_MINUTES));
+    }
+
+    /**
+     * Check if knowledge base generation is active for a user
+     */
+    public static function isKnowledgeBaseGenerationActive(int $userId): bool
+    {
+        return Cache::has(self::KNOWLEDGE_BASE_PREFIX.$userId);
+    }
+
+    /**
+     * Finish knowledge base generation for a user
+     */
+    public static function finishKnowledgeBaseGeneration(int $userId): void
+    {
+        Cache::forget(self::KNOWLEDGE_BASE_PREFIX.$userId);
     }
 }

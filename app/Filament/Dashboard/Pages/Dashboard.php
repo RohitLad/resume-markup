@@ -38,6 +38,8 @@ class Dashboard extends Page implements HasForms
 
     public bool $shouldPoll = false;
 
+    public bool $isGeneratingKnowledgeBase = false;
+
     public ?string $lastUpdatedAt = null;
 
     public function mount(): void
@@ -46,11 +48,15 @@ class Dashboard extends Page implements HasForms
 
         // Check if resume parsing is currently active for this user
         $this->shouldPoll = ResumeProcessingStatus::isParsingActive((int) auth()->id());
+        
+        // Check if knowledge base generation is active
+        $this->isGeneratingKnowledgeBase = ResumeProcessingStatus::isKnowledgeBaseGenerationActive((int) auth()->id());
     }
 
     public function pollForUpdates(): void
     {
         $profile = Profile::where('user_id', auth()->id())->first();
+        $userId = (int) auth()->id();
 
         if ($profile && $profile->updated_at && $this->lastUpdatedAt !== $profile->updated_at->toISOString()) {
             // Profile has been updated, refresh the data
@@ -64,7 +70,21 @@ class Dashboard extends Page implements HasForms
                 ->send();
 
             // Check if parsing is still active (might have finished)
-            $this->shouldPoll = ResumeProcessingStatus::isParsingActive((int) auth()->id());
+            $this->shouldPoll = ResumeProcessingStatus::isParsingActive($userId);
+        }
+
+        // Check if knowledge base generation has finished
+        if ($this->isGeneratingKnowledgeBase && ! ResumeProcessingStatus::isKnowledgeBaseGenerationActive($userId)) {
+            $this->isGeneratingKnowledgeBase = false;
+            
+            // Reload profile to get updated knowledge base timestamp
+            $this->loadProfileData();
+
+            Notification::make()
+                ->success()
+                ->title('Knowledge Base Updated')
+                ->body('Your knowledge base has been successfully updated. You can now generate resumes.')
+                ->send();
         }
     }
 
@@ -709,6 +729,33 @@ class Dashboard extends Page implements HasForms
                         ->send();
                 })
                 ->visible($this->showForm)
+                ->requiresConfirmation(false),
+
+            Action::make('generate_knowledge_base')
+                ->label('Generate Knowledge Base')
+                ->icon('heroicon-o-sparkles')
+                ->color('info')
+                ->action(function () {
+                    $processingService = app(ResumeProcessingService::class);
+                    
+                    try {
+                        $processingService->initiateKnowledgeBaseGeneration(auth()->id());
+                        $this->isGeneratingKnowledgeBase = true;
+
+                        Notification::make()
+                            ->info()
+                            ->title('Knowledge Base Generation Started')
+                            ->body('Your knowledge base is being generated. This may take a few minutes.')
+                            ->send();
+                    } catch (\Exception $e) {
+                        Notification::make()
+                            ->danger()
+                            ->title('Failed to Start Knowledge Base Generation')
+                            ->body($e->getMessage())
+                            ->send();
+                    }
+                })
+                ->visible()
                 ->requiresConfirmation(false),
         ];
     }

@@ -20,15 +20,29 @@ class CreateResume extends CreateRecord
 
     protected function afterCreate(): void
     {
-        // Initiate resume generation
         $processingService = app(ResumeProcessingService::class);
-        $processingService->initiateResumeGeneration($this->record);
+        
+        try {
+            $processingService->initiateResumeGeneration($this->record);
 
-        // Show success notification
-        Notification::make()
-            ->success()
-            ->title('Resume Created')
-            ->body('Your resume has been created and is being generated. You will be notified when it\'s ready.')
-            ->send();
+            Notification::make()
+                ->success()
+                ->title('Resume Created')
+                ->body('Your resume has been created and is being generated. You will be notified when it\'s ready.')
+                ->send();
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'Knowledge base needs to be updated')) {
+                // Knowledge base needs to be updated first
+                $processingService->initiateKnowledgeBaseGeneration($this->record->user_id);
+
+                Notification::make()
+                    ->info()
+                    ->title('Knowledge Base Update Required')
+                    ->body('Your knowledge base is being updated first. Resume generation will start automatically once complete.')
+                    ->send();
+            } else {
+                throw $e;
+            }
+        }
     }
 }

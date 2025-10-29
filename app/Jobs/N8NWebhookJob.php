@@ -52,6 +52,9 @@ class N8NWebhookJob implements ShouldQueue
                 case 'generate_resume':
                     $this->handleGenerateResume();
                     break;
+                case 'generate_knowledgebase':
+                    $this->handleCreateKnowledgeBase();
+                    break;
                 default:
                     Log::error('Unknown webhook type', ['type' => $this->payload['type']]);
             }
@@ -128,6 +131,42 @@ class N8NWebhookJob implements ShouldQueue
             'resume_id' => $resumeId,
             'user_id' => $resume->user_id,
             'content_length' => strlen($content),
+        ]);
+    }
+
+    private function handleCreateKnowledgeBase(): void
+    {
+        $userId = $this->payload['user_id'] ?? null;
+        $knowledgeBaseData = $this->payload['content'] ?? null;
+
+        if (! $userId || ! $knowledgeBaseData) {
+            Log::error('Missing user_id or content in create knowledge base webhook', [
+                'user_id' => $userId,
+                'has_content' => ! empty($knowledgeBaseData),
+            ]);
+
+            return;
+        }
+
+        $profile = Profile::where('user_id', $userId)->first();
+        if (! $profile) {
+            Log::error('Profile not found for knowledge base webhook processing', ['user_id' => $userId]);
+
+            return;
+        }
+
+        // Update profile with knowledge base data and timestamp
+        $profile->update([
+            'knowledgebase' => $knowledgeBaseData,
+            'knowledgebase_updated_at' => now(),
+        ]);
+
+        // Clear the knowledge base generation status cache
+        ResumeProcessingStatus::finishKnowledgeBaseGeneration((int) $userId);
+
+        Log::info('Successfully processed knowledge base generation webhook', [
+            'user_id' => $userId,
+            'knowledgebase_size' => is_array($knowledgeBaseData) ? count($knowledgeBaseData) : strlen(json_encode($knowledgeBaseData)),
         ]);
     }
 

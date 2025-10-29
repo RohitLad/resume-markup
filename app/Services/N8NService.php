@@ -154,6 +154,64 @@ class N8NService
     }
 
     /**
+     * Generate knowledge base using n8n workflow (async with webhook)
+     */
+    public function generateKnowledgeBase(array $profileData, string $webhookUrl, array $metadata = []): string
+    {
+        $fullUrl = $this->buildUrl('generate_knowledgebase', 'generate-knowledgebase');
+        $requestId = (string) \Illuminate\Support\Str::uuid();
+        $startTime = microtime(true);
+
+        Log::info('Sending async request to n8n for knowledge base generation', [
+            'url' => $fullUrl,
+            'request_id' => $requestId,
+            'webhook_url' => $webhookUrl,
+            'profile_keys' => array_keys($profileData),
+        ]);
+
+        try {
+            $response = $this->client->request('POST', $fullUrl, [
+                'json' => [
+                    'data' => $profileData,
+                    'webhook_url' => $webhookUrl,
+                    'metadata' => array_merge($metadata, [
+                        'type' => 'generate_knowledgebase',
+                        'request_id' => $requestId,
+                    ]),
+                ],
+                'headers' => $this->getHeaders(),
+            ]);
+
+            $responseTime = microtime(true) - $startTime;
+            $statusCode = $response->getStatusCode();
+
+            if ($statusCode < 200 || $statusCode >= 300) {
+                $body = $response->getBody()->getContents();
+                Log::error('n8n knowledge base generation request failed', [
+                    'status' => $statusCode,
+                    'body' => $body,
+                    'url' => $fullUrl,
+                    'request_id' => $requestId,
+                ]);
+                throw new \Exception("n8n workflow failed with status {$statusCode}: {$body}");
+            }
+
+            Log::info('Successfully initiated knowledge base generation request', [
+                'request_id' => $requestId,
+                'response_time_seconds' => round($responseTime, 2),
+            ]);
+
+            return $requestId;
+
+        } catch (GuzzleException $e) {
+            $this->logError('n8n knowledge base generation request failed', $e, $fullUrl, microtime(true) - $startTime, [
+                'request_id' => $requestId,
+            ]);
+            throw new \Exception('Failed to initiate knowledge base generation: '.$e->getMessage(), 0, $e);
+        }
+    }
+
+    /**
      * Test the n8n connection
      */
     public function testConnection(): bool

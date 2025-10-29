@@ -23,14 +23,29 @@ class EditResume extends EditRecord
 
     protected function afterSave(): void
     {
-        // Regenerate the resume content when job details are updated
         $processingService = app(ResumeProcessingService::class);
-        $processingService->initiateResumeGeneration($this->record);
+        
+        try {
+            $processingService->initiateResumeGeneration($this->record);
 
-        Notification::make()
-            ->success()
-            ->title('Resume Updated')
-            ->body('Your resume has been updated and is being regenerated with the new job details.')
-            ->send();
+            Notification::make()
+                ->success()
+                ->title('Resume Updated')
+                ->body('Your resume has been updated and is being regenerated with the new job details.')
+                ->send();
+        } catch (\Exception $e) {
+            if (str_contains($e->getMessage(), 'Knowledge base needs to be updated')) {
+                // Knowledge base needs to be updated first
+                $processingService->initiateKnowledgeBaseGeneration($this->record->user_id);
+
+                Notification::make()
+                    ->info()
+                    ->title('Knowledge Base Update Required')
+                    ->body('Your knowledge base is being updated first. Resume generation will start automatically once complete.')
+                    ->send();
+            } else {
+                throw $e;
+            }
+        }
     }
 }

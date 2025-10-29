@@ -44,6 +44,57 @@ class ResumeProcessingService
     }
 
     /**
+     * Initiate knowledge base generation by sending profile data to n8n workflow
+     */
+    public function initiateKnowledgeBaseGeneration(string $userId): string
+    {
+        $profile = \App\Models\Profile::where('user_id', $userId)->first();
+
+        if (! $profile || ! $profile->data) {
+            Log::warning('Knowledge base generation failed: No profile data found', [
+                'user_id' => $userId,
+            ]);
+            throw new \Exception('No profile data found for knowledge base generation');
+        }
+
+        // Mark knowledge base generation as active for this user
+        ResumeProcessingStatus::startKnowledgeBaseGeneration((int) $userId);
+
+        $webhookUrl = $this->n8nService->getWebhookUrl();
+        $requestId = $this->n8nService->generateKnowledgeBase(
+            $profile->data,
+            $webhookUrl,
+            [
+                'user_id' => $userId,
+            ]
+        );
+
+        Log::info('Knowledge base generation initiated', [
+            'user_id' => $userId,
+            'request_id' => $requestId,
+            'webhook_url' => $webhookUrl,
+        ]);
+
+        return $requestId;
+    }
+
+    /**
+     * Check if knowledge base needs to be regenerated
+     */
+    public function needsKnowledgeBaseUpdate(string $userId): bool
+    {
+        $profile = \App\Models\Profile::where('user_id', $userId)->first();
+
+        if (! $profile || ! $profile->data) {
+            return false;
+        }
+
+        // If knowledge base has never been generated, or profile was updated after knowledge base
+        return ! $profile->knowledgebase_updated_at || 
+               $profile->knowledgebase_updated_at->lt($profile->updated_at);
+    }
+
+    /**
      * Initiate resume generation by sending profile data to n8n workflow
      */
     public function initiateResumeGeneration(Resume $resume): string
@@ -57,6 +108,18 @@ class ResumeProcessingService
                 'user_id' => $user->id,
             ]);
             throw new \Exception('No profile data found for resume generation');
+        }
+
+        // Check if knowledge base needs to be updated first
+        if ($this->needsKnowledgeBaseUpdate($user->id)) {
+            Log::info('Knowledge base needs update before resume generation', [
+                'user_id' => $user->id,
+                'resume_id' => $resume->id,
+                'profile_updated_at' => $profile->updated_at,
+                'knowledgebase_updated_at' => $profile->knowledgebase_updated_at,
+            ]);
+            
+            throw new \Exception('Knowledge base needs to be updated before resume generation');
         }
 
         // Mark generation as active for this specific resume
