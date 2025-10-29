@@ -114,7 +114,7 @@ class Dashboard extends Page implements HasForms
                     ->directory('resumes')
                     ->disk('public')
                     ->acceptedFileTypes(['application/pdf'])
-                    ->maxSize(10240)
+                    ->maxSize(2048)
                     ->afterStateUpdated(function ($state) {
                         if (! $state) {
                             return;
@@ -131,15 +131,29 @@ class Dashboard extends Page implements HasForms
                                 $fileName = time().'_'.$temporaryUpload->getClientOriginalName();
                                 $storedPath = Storage::disk('public')->putFileAs('resumes', $temporaryUpload, $fileName);
 
-                                // Initiate resume parsing
-                                $processingService = app(ResumeProcessingService::class);
-                                $processingService->initiateResumeParsing(auth()->id(), $storedPath);
+                                try {
+                                    // Initiate resume parsing
+                                    $processingService = app(ResumeProcessingService::class);
+                                    $processingService->initiateResumeParsing(auth()->id(), $storedPath);
 
-                                Notification::make()
-                                    ->success()
-                                    ->title('Resume Uploaded')
-                                    ->body('Your resume is being processed.')
-                                    ->send();
+                                    Notification::make()
+                                        ->success()
+                                        ->title('Resume Uploaded')
+                                        ->body('Your resume is being processed.')
+                                        ->send();
+                                } catch (\Exception $processingError) {
+                                    \Log::warning('Resume processing failed, but file was uploaded', [
+                                        'error' => $processingError->getMessage(),
+                                        'user_id' => auth()->id(),
+                                        'file_path' => $storedPath,
+                                    ]);
+
+                                    Notification::make()
+                                        ->warning()
+                                        ->title('Resume Uploaded')
+                                        ->body('Your resume was uploaded successfully, but automatic processing is currently unavailable. You can manually fill in the form.')
+                                        ->send();
+                                }
                             }
                         } catch (\Exception $e) {
                             \Log::error('Resume upload failed', [

@@ -108,7 +108,6 @@ return [
     'n8n' => [
         'url' => env('N8N_URL'),
         'api_key' => env('N8N_API_KEY'),
-        'webhook_url' => env('N8N_WEBHOOK_URL'),
         'endpoints' => [
             'generate_resume' => 'generate-resume',
             'generate_knowledgebase' => 'generate-knowledgebase',

@@ -353,13 +353,6 @@ class N8NService
      */
     public function getWebhookUrl(): string
     {
-        // Use configured webhook URL if available
-        $configuredUrl = config('services.n8n.webhook_url');
-        if ($configuredUrl) {
-            return $configuredUrl;
-        }
-
-        // Otherwise generate based on environment
         $baseUrl = config('app.env') === 'production'
             ? config('app.url')
             : config('app.tunnel_url', config('app.url'));
